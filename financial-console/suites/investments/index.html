@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investments Suite | Finance Console</title>
+    <style>
+        :root {
+            --bg: #0f0f23;
+            --panel: #1a1a2e;
+            --border: #2d2d4d;
+            --text: #e0e0ff;
+            --muted: #8a8ac4;
+            --accent: #22c55e;
+            --accent-soft: rgba(34, 197, 94, 0.16);
+            --radius: 10px;
+            --transition-fast: 0.2s ease;
+            --transition: 0.3s ease;
+        }
+
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --accent: #16a34a;
+            --accent-soft: rgba(22, 163, 74, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            transition: background-color var(--transition);
+            overflow-x: hidden;
+        }
+
+        /* Sidebar - Same structure */
+        .sidebar {
+            width: 260px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all var(--transition);
+        }
+
+        .brand {
+            margin-bottom: 2rem;
+        }
+
+        .brand-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+        }
+
+        .brand-subtitle {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-top: 0.5rem;
+        }
+
+        .meta-lines {
+            background: var(--accent-soft);
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            border: 1px solid var(--border);
+        }
+
+        .meta-lines span {
+            display: block;
+            color: var(--text);
+        }
+
+        .meta-lines .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .nav-items {
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--accent-soft);
+            border-color: var(--border);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .workspace-pill {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), transparent);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent);
+            border: 1px solid var(--accent-soft);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            max-width: calc(100% - 260px);
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .page-info h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .page-info p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .topbar-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .back-btn {
+            padding: 0.75rem 1.25rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all var(--transition-fast);
+        }
+
+        .back-btn:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+        }
+
+        .theme-toggle {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+        }
+
+        /* Tools Layout */
+        .tools-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .tool-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: all var(--transition);
+            position: relative;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at top left, var(--accent-soft), transparent 55%);
+            pointer-events: none;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.15);
+        }
+
+        .tool-card-header {
+            padding: 1.25rem 1.5rem;
+            background: linear-gradient(135deg, var(--accent), #16a34a);
+            position: relative;
+            z-index: 1;
+        }
+
+        .tool-card-header h3 {
+            color: white;
+            margin: 0;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .tool-card-body {
+            padding: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tool-card-body p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .tool-card-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tool-tags {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tag {
+            padding: 0.25rem 0.75rem;
+            background: var(--accent-soft);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: var(--accent);
+            border: 1px solid var(--border);
+        }
+
+        .tool-arrow {
+            color: var(--muted);
+            transition: transform var(--transition-fast);
+        }
+
+        .tool-card:hover .tool-arrow {
+            transform: translateX(4px);
+            color: var(--accent);
+        }
+
+        /* Panel Styles */
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-body {
+            padding: 1.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+                padding: 1rem;
+            }
+
+            .brand-title,
+            .brand-subtitle,
+            .meta-lines,
+            .nav-item span {
+                display: none;
+            }
+
+            .nav-item {
+                justify-content: center;
+                padding: 0.75rem;
+            }
+
+            .nav-item i {
+                margin: 0;
+            }
+
+            .main-content {
+                margin-left: 60px;
+                max-width: calc(100% - 60px);
+                padding: 1rem;
+            }
+
+            .tools-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body data-theme="dark">
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <div class="brand">
+            <div class="brand-title">Finance Console</div>
+            <div class="brand-subtitle">Financial Tools & Personal Wealth Calculators</div>
+        </div>
+
+        <div class="meta-lines">
+            <span class="highlight">Wealth Planning · Tax Optimization · ROI · Investments</span>
+            <span>SIP · SWP · FD · RD · Loans · Forex · Gold · Solar</span>
+        </div>
+
+        <div class="nav-items">
+            <a href="../../index.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="../financial-calculators/index.html" class="nav-item">
+                <i class="fas fa-calculator"></i>
+                <span>Financial Calculators</span>
+            </a>
+            <a href="index.html" class="nav-item active">
+                <i class="fas fa-chart-line"></i>
+                <span>Investments</span>
+            </a>
+            <a href="../loans/index.html" class="nav-item">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>Loans</span>
+            </a>
+            <a href="../taxes/index.html" class="nav-item">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Taxes</span>
+            </a>
+            <a href="suites/trading/index.html" class="nav-item">
+                <i class="fas fa-arrow-trend-up"></i>
+                <span>Trading</span>
+            </a>
+            <a href="suites/gold-metals/index.html" class="nav-item">
+                <i class="fas fa-gem"></i>
+                <span>Gold & Metals</span>
+            </a>
+            <a href="suites/currency-tools/index.html" class="nav-item">
+                <i class="fas fa-globe"></i>
+                <span>Currency Tools</span>
+            </a>
+            <a href="suites/solar-power/index.html" class="nav-item">
+                <i class="fas fa-solar-panel"></i>
+                <span>Solar Power</span>
+            </a>
+            <a href="../../../index.html" class="nav-item">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Portfolio</span>
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="workspace-pill">Investments Workspace</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="page-info">
+                <h1>Investments Suite</h1>
+                <p>Portfolio Trackers, Mutual Funds, Stocks, NPS & Wealth Building Tools</p>
+            </div>
+
+            <div class="topbar-controls">
+                <a href="../../index.html" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Console
+                </a>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tools Layout -->
+        <div class="tools-layout">
+            <div class="left-column">
+                <h2 style="margin-bottom: 1.5rem; color: var(--accent);">Investment Tools</h2>
+
+                <div class="tools-grid">
+                    <!-- Portfolio Tracker -->
+                    <a href="portfolio-tracker/index.html" class="tool-card">
+                        <div class="tool-card-header">
+                            <h3><i class="fas fa-chart-pie"></i> Portfolio Tracker</h3>
+                        </div>
+                        <div class="tool-card-body">
+                            <p>Track all your investments in one place with real-time performance metrics and asset
+                                allocation.</p>
+                            <div class="tool-tags">
+                                <span class="tag">Dashboard</span>
+                                <span class="tag">Real-time</span>
+                            </div>
+                        </div>
+                        <div class="tool-card-footer">
+                            <div class="tool-tags">
+                                <span class="tag">XIRR</span>
+                                <span class="tag">Allocation</span>
+                            </div>
+                            <div class="tool-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Mutual Fund Calculator -->
+                    <a href="mutual-funds/index.html" class="tool-card">
+                        <div class="tool-card-header">
+                            <h3><i class="fas fa-money-bill-trend-up"></i> Mutual Fund Calculator</h3>
+                        </div>
+                        <div class="tool-card-body">
+                            <p>Calculate returns on mutual fund investments with SIP, lump sum, and SWP options.</p>
+                            <div class="tool-tags">
+                                <span class="tag">SIP</span>
+                                <span class="tag">Lump Sum</span>
+                            </div>
+                        </div>
+                        <div class="tool-card-footer">
+                            <div class="tool-tags">
+                                <span class="tag">NAV</span>
+                                <span class="tag">Expense Ratio</span>
+                            </div>
+                            <div class="tool-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Stock Investment Calculator -->
+                    <a href="stock-calculator/index.html" class="tool-card">
+                        <div class="tool-card-header">
+                            <h3><i class="fas fa-chart-line"></i> Stock Calculator</h3>
+                        </div>
+                        <div class="tool-card-body">
+                            <p>Calculate stock investment returns with dividends, brokerage, and tax implications.</p>
+                            <div class="tool-tags">
+                                <span class="tag">Equity</span>
+                                <span class="tag">Dividends</span>
+                            </div>
+                        </div>
+                        <div class="tool-card-footer">
+                            <div class="tool-tags">
+                                <span class="tag">Brokerage</span>
+                                <span class="tag">STCG/LTCG</span>
+                            </div>
+                            <div class="tool-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- NPS Calculator -->
+                    <a href="nps-calculator/index.html" class="tool-card">
+                        <div class="tool-card-header">
+                            <h3><i class="fas fa-piggy-bank"></i> NPS Calculator</h3>
+                        </div>
+                        <div class="tool-card-body">
+                            <p>National Pension System calculator with tier I & II accounts, tax benefits, and annuity
+                                options.</p>
+                            <div class="tool-tags">
+                                <span class="tag">Pension</span>
+                                <span class="tag">Retirement</span>
+                            </div>
+                        </div>
+                        <div class="tool-card-footer">
+                            <div class="tool-tags">
+                                <span class="tag">Annuity</span>
+                                <span class="tag">Tax Benefit</span>
+                            </div>
+                            <div class="tool-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Goal-Based Investing -->
+                    <a href="goal-based-investing/index.html" class="tool-card">
+                        <div class="tool-card-header">
+                            <h3><i class="fas fa-bullseye"></i> Goal-Based Investing</h3>
+                        </div>
+                        <div class="tool-card-body">
+                            <p>Plan investments for specific financial goals like retirement, education, or home
+                                purchase.</p>
+                            <div class="tool-tags">
+                                <span class="tag">Planning</span>
+                                <span class="tag">Goals</span>
+                            </div>
+                        </div>
+                        <div class="tool-card-footer">
+                            <div class="tool-tags">
+                                <span class="tag">Target</span>
+                                <span class="tag">Timeline</span>
+                            </div>
+                            <div class="tool-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Asset Allocation Planner -->
+                    <a href="asset-allocation/index.html" class="tool-card">
+                        <div class="tool-card-header">
+                            <h3><i class="fas fa-balance-scale"></i> Asset Allocation</h3>
+                        </div>
+                        <div class="tool-card-body">
+                            <p>Create optimal asset allocation based on risk profile, age, and investment horizon.</p>
+                            <div class="tool-tags">
+                                <span class="tag">Risk</span>
+                                <span class="tag">Diversification</span>
+                            </div>
+                        </div>
+                        <div class="tool-card-footer">
+                            <div class="tool-tags">
+                                <span class="tag">Rebalancing</span>
+                                <span class="tag">Portfolio</span>
+                            </div>
+                            <div class="tool-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Investment Comparison -->
+                    <a href="investment-comparison/index.html" class="tool-card">
+                        <div class="tool-card-header">
+                            <h3><i class="fas fa-balance-scale-left"></i> Investment Comparison</h3>
+                        </div>
+                        <div class="tool-card-body">
+                            <p>Compare different investment options based on returns, risk, and other parameters.</p>
+                            <div class="tool-tags">
+                                <span class="tag">Analysis</span>
+                                <span class="tag">Decision</span>
+                            </div>
+                        </div>
+                        <div class="tool-card-footer">
+                            <div class="tool-tags">
+                                <span class="tag">Risk-Return</span>
+                                <span class="tag">Side-by-side</span>
+                            </div>
+                            <div class="tool-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Dividend Calculator -->
+                    <a href="dividend-calculator/index.html" class="tool-card">
+                        <div class="tool-card-header">
+                            <h3><i class="fas fa-money-check-alt"></i> Dividend Calculator</h3>
+                        </div>
+                        <div class="tool-card-body">
+                            <p>Calculate dividend income from stocks and mutual funds with DRIP (Dividend Reinvestment)
+                                option.</p>
+                            <div class="tool-tags">
+                                <span class="tag">Income</span>
+                                <span class="tag">DRIP</span>
+                            </div>
+                        </div>
+                        <div class="tool-card-footer">
+                            <div class="tool-tags">
+                                <span class="tag">Yield</span>
+                                <span class="tag">Reinvestment</span>
+                            </div>
+                            <div class="tool-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="right-column">
+                <!-- Investment Principles -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Investment Principles</span>
+                        <i class="fas fa-book" style="color: var(--accent);"></i>
+                    </div>
+                    <div class="panel-body">
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                <div style="color: var(--accent);">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 500;">Time in Market</div>
+                                    <div style="font-size: 0.85rem; color: var(--muted);">Better than timing the market
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                <div style="color: var(--accent);">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 500;">Diversification</div>
+                                    <div style="font-size: 0.85rem; color: var(--muted);">Spread risk across assets
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                <div style="color: var(--accent);">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 500;">Compounding</div>
+                                    <div style="font-size: 0.85rem; color: var(--muted);">Let returns generate returns
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Categories -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Risk Categories</span>
+                        <i class="fas fa-shield-alt" style="color: var(--accent);"></i>
+                    </div>
+                    <div class="panel-body">
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.9rem;">Low Risk</span>
+                                <span style="font-size: 0.8rem; color: var(--accent);">FD, Debt Funds</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.9rem;">Medium Risk</span>
+                                <span style="font-size: 0.8rem; color: var(--accent);">Hybrid Funds, NPS</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.9rem;">High Risk</span>
+                                <span style="font-size: 0.8rem; color: var(--accent);">Equity, Stocks</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Calculators -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Quick Access</span>
+                        <i class="fas fa-bolt" style="color: var(--accent);"></i>
+                    </div>
+                    <div class="panel-body">
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <a href="portfolio-tracker/index.html"
+                                style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--accent-soft); border-radius: var(--radius); text-decoration: none; color: var(--text);">
+                                <i class="fas fa-chart-pie" style="color: var(--accent);"></i>
+                                <span>Portfolio Tracker</span>
+                            </a>
+                            <a href="mutual-funds/index.html"
+                                style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--accent-soft); border-radius: var(--radius); text-decoration: none; color: var(--text);">
+                                <i class="fas fa-money-bill-trend-up" style="color: var(--accent);"></i>
+                                <span>Mutual Funds</span>
+                            </a>
+                            <a href="nps-calculator/index.html"
+                                style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--accent-soft); border-radius: var(--radius); text-decoration: none; color: var(--text);">
+                                <i class="fas fa-piggy-bank" style="color: var(--accent);"></i>
+                                <span>NPS Calculator</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Key Metrics</span>
+                        <i class="fas fa-chart-bar" style="color: var(--accent);"></i>
+                    </div>
+                    <div class="panel-body">
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent);">CAGR</div>
+                                <div style="font-size: 0.8rem; color: var(--muted);">Compound Growth</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent);">XIRR</div>
+                                <div style="font-size: 0.8rem; color: var(--muted);">Irregular Cash Flows</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent);">Sharpe</div>
+                                <div style="font-size: 0.8rem; color: var(--muted);">Risk-Adjusted Return</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent);">Alpha</div>
+                                <div style="font-size: 0.8rem; color: var(--muted);">Excess Return</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            document.body.setAttribute('data-theme', newTheme);
+            themeIcon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('theme', newTheme);
+        });
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-theme', savedTheme);
+        themeIcon.className = savedTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    </script>
+</body>
+
+</html>

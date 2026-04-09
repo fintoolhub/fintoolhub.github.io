@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Console | FINMETTAX</title>
+    <style>
+        :root {
+            --bg: #0f0f23;
+            --panel: #1a1a2e;
+            --border: #2d2d4d;
+            --text: #e0e0ff;
+            --muted: #8a8ac4;
+            --accent: #38bdf8;
+            --accent-soft: rgba(56, 189, 248, 0.16);
+            --radius: 10px;
+            --transition-fast: 0.2s ease;
+            --transition: 0.3s ease;
+        }
+
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --accent: #0ea5e9;
+            --accent-soft: rgba(14, 165, 233, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            transition: background-color var(--transition);
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all var(--transition);
+        }
+
+        .brand {
+            margin-bottom: 2rem;
+        }
+
+        .brand-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+        }
+
+        .brand-subtitle {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-top: 0.5rem;
+        }
+
+        .meta-lines {
+            background: var(--accent-soft);
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            border: 1px solid var(--border);
+        }
+
+        .meta-lines span {
+            display: block;
+            color: var(--text);
+        }
+
+        .meta-lines .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .nav-items {
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--accent-soft);
+            border-color: var(--border);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .workspace-pill {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), transparent);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent);
+            border: 1px solid var(--accent-soft);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            max-width: calc(100% - 260px);
+        }
+
+        /* Topbar */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .page-info h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .page-info p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .topbar-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .back-btn {
+            padding: 0.75rem 1.25rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all var(--transition-fast);
+        }
+
+        .back-btn:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+        }
+
+        .theme-toggle {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+        }
+
+        /* Dashboard Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        /* Suites Grid */
+        .suites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .suite-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-decoration: none;
+            color: var(--text);
+            transition: all var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .suite-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--card-accent), transparent);
+        }
+
+        .suite-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--card-accent);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .suite-card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .suite-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .suite-card h3 {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .suite-card p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .suite-tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tool-tag {
+            padding: 0.25rem 0.75rem;
+            background: var(--accent-soft);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: var(--accent);
+            border: 1px solid var(--border);
+        }
+
+        /* Stats Panel */
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-body {
+            padding: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Quick Links */
+        .quick-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .quick-link {
+            padding: 0.75rem 1rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all var(--transition-fast);
+        }
+
+        .quick-link:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            transform: translateX(4px);
+        }
+
+        .quick-link i {
+            color: var(--accent);
+        }
+
+        /* Footer */
+        .console-footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .suites-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+                padding: 1rem;
+            }
+
+            .brand-title,
+            .brand-subtitle,
+            .meta-lines,
+            .nav-item span {
+                display: none;
+            }
+
+            .nav-item {
+                justify-content: center;
+                padding: 0.75rem;
+            }
+
+            .nav-item i {
+                margin: 0;
+            }
+
+            .main-content {
+                margin-left: 60px;
+                max-width: calc(100% - 60px);
+                padding: 1rem;
+            }
+
+            .topbar {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .suites-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body data-theme="dark">
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <div class="brand">
+            <div class="brand-title">Finance Console</div>
+            <div class="brand-subtitle">Financial Tools & Personal Wealth Calculators</div>
+        </div>
+
+        <div class="meta-lines">
+            <span class="highlight">Wealth Planning · Tax Optimization · ROI · Investments</span>
+            <span>SIP · SWP · FD · RD · Loans · Forex · Gold · Solar</span>
+        </div>
+
+        <div class="nav-items">
+            <a href="index.html" class="nav-item active">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="suites/financial-calculators/index.html" class="nav-item">
+                <i class="fas fa-calculator"></i>
+                <span>Financial Calculators</span>
+            </a>
+            <a href="suites/investments/index.html" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Investments</span>
+            </a>
+            <a href="suites/loans/index.html" class="nav-item">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>Loans</span>
+            </a>
+            <a href="suites/taxes/index.html" class="nav-item">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Taxes</span>
+            </a>
+            <a href="suites/trading/index.html" class="nav-item">
+                <i class="fas fa-arrow-trend-up"></i>
+                <span>Trading</span>
+            </a>
+            <a href="suites/gold-metals/index.html" class="nav-item">
+                <i class="fas fa-gem"></i>
+                <span>Gold & Metals</span>
+            </a>
+            <a href="suites/currency-tools/index.html" class="nav-item">
+                <i class="fas fa-globe"></i>
+                <span>Currency Tools</span>
+            </a>
+            <a href="suites/solar-power/index.html" class="nav-item">
+                <i class="fas fa-solar-panel"></i>
+                <span>Solar Power</span>
+            </a>
+            <a href="../index.html" class="nav-item">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Portfolio</span>
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="workspace-pill">Finance Console Workspace</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="page-info">
+                <h1>Finance Console</h1>
+                <p>SIP, SWP, FD, RD, Loans, Tax, Currency, Gold & Wealth Tools</p>
+            </div>
+
+            <div class="topbar-controls">
+                <a href="../index.html" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Portfolio
+                </a>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard">
+            <div class="left-column">
+                <!-- Suites Grid -->
+                <h2 style="margin-bottom: 1.5rem; color: var(--accent);">Financial Suites</h2>
+                <div class="suites-grid">
+                    <!-- Financial Calculators Suite -->
+                    <a href="suites/financial-calculators/index.html" class="suite-card"
+                        style="--card-accent: #38bdf8;">
+                        <div class="suite-card-header">
+                            <div class="suite-icon" style="background: linear-gradient(135deg, #38bdf8, #0ea5e9);">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <h3>Financial Calculators</h3>
+                        </div>
+                        <p>Core financial calculators including SIP, SWP, FD, RD, and interest calculations</p>
+                        <div class="suite-tools">
+                            <span class="tool-tag">SIP Calculator</span>
+                            <span class="tool-tag">Compound Interest</span>
+                            <span class="tool-tag">FD Calculator</span>
+                            <span class="tool-tag">SWP Planner</span>
+                        </div>
+                    </a>
+
+                    <!-- Investments Suite -->
+                    <a href="suites/investments/index.html" class="suite-card" style="--card-accent: #22c55e;">
+                        <div class="suite-card-header">
+                            <div class="suite-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3>Investments</h3>
+                        </div>
+                        <p>Portfolio trackers, mutual funds, stocks, and investment planning tools</p>
+                        <div class="suite-tools">
+                            <span class="tool-tag">Portfolio Tracker</span>
+                            <span class="tool-tag">Mutual Funds</span>
+                            <span class="tool-tag">Stock Calculator</span>
+                            <span class="tool-tag">NPS Calculator</span>
+                        </div>
+                    </a>
+
+                    <!-- Loans Suite -->
+                    <a href="suites/loans/index.html" class="suite-card" style="--card-accent: #f97316;">
+                        <div class="suite-card-header">
+                            <div class="suite-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                            <h3>Loans</h3>
+                        </div>
+                        <p>All loan calculators including home, personal, car, education, and gold loans</p>
+                        <div class="suite-tools">
+                            <span class="tool-tag">Home Loan</span>
+                            <span class="tool-tag">Personal Loan</span>
+                            <span class="tool-tag">Car Loan</span>
+                            <span class="tool-tag">EMI Calculator</span>
+                        </div>
+                    </a>
+
+                    <!-- Taxes Suite -->
+                    <a href="suites/taxes/index.html" class="suite-card" style="--card-accent: #a855f7;">
+                        <div class="suite-card-header">
+                            <div class="suite-icon" style="background: linear-gradient(135deg, #a855f7, #9333ea);">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </div>
+                            <h3>Taxes</h3>
+                        </div>
+                        <p>Income tax calculators, GST, capital gains, and tax planning tools</p>
+                        <div class="suite-tools">
+                            <span class="tool-tag">Income Tax</span>
+                            <span class="tool-tag">GST Calculator</span>
+                            <span class="tool-tag">Capital Gains</span>
+                            <span class="tool-tag">Tax Saving</span>
+                        </div>
+                    </a>
+                    <!-- Trading & Stock Market Suite -->
+                    <a href="suites/trading/index.html" class="suite-card" style="--card-accent: #22c55e;">
+                        <div class="suite-card-header">
+                            <div class="suite-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3>Trading & Stocks</h3>
+                        </div>
+                        <p>Stock market tools including average calculator, brokerage charges, and trading profit
+                            analysis</p>
+                        <div class="suite-tools">
+                            <span class="tool-tag">Stock Average</span>
+                            <span class="tool-tag">Brokerage Calc</span>
+                            <span class="tool-tag">Profit/Loss</span>
+                            <span class="tool-tag">Position Size</span>
+                        </div>
+                    </a>
+                    <!-- Currency Tools Suite -->
+                    <a href="suites/currency-tools/index.html" class="suite-card" style="--card-accent: #06b6d4;">
+                        <div class="suite-card-header">
+                            <div class="suite-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <h3>Currency Tools</h3>
+                        </div>
+                        <p>Currency converter, denomination calculator, and forex tools</p>
+                        <div class="suite-tools">
+                            <span class="tool-tag">Converter</span>
+                            <span class="tool-tag">Denomination</span>
+                            <span class="tool-tag">Forex Profit</span>
+                            <span class="tool-tag">Travel Currency</span>
+                        </div>
+                    </a>
+
+                    <!-- Gold & Metals Suite -->
+                    <a href="suites/gold-metals/index.html" class="suite-card" style="--card-accent: #eab308;">
+                        <div class="suite-card-header">
+                            <div class="suite-icon" style="background: linear-gradient(135deg, #eab308, #ca8a04);">
+                                <i class="fas fa-gem"></i>
+                            </div>
+                            <h3>Gold & Metals</h3>
+                        </div>
+                        <p>Gold rate calculator, silver calculator, and precious metal tools</p>
+                        <div class="suite-tools">
+                            <span class="tool-tag">Gold Rate</span>
+                            <span class="tool-tag">Silver Calc</span>
+                            <span class="tool-tag">Metal Purity</span>
+                            <span class="tool-tag">Jewelry Making</span>
+                        </div>
+                    </a>
+
+                    <!-- Solar Power Suite -->
+                    <a href="suites/solar-power/index.html" class="suite-card" style="--card-accent: #14b8a6;">
+                        <div class="suite-card-header">
+                            <div class="suite-icon" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">
+                                <i class="fas fa-solar-panel"></i>
+                            </div>
+                            <h3>Solar Power</h3>
+                        </div>
+                        <p>Solar ROI calculator, panel efficiency, and energy savings tools</p>
+                        <div class="suite-tools">
+                            <span class="tool-tag">Solar ROI</span>
+                            <span class="tool-tag">Panel Efficiency</span>
+                            <span class="tool-tag">Subsidy Calc</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="right-column">
+                <!-- Stats Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Console Stats</span>
+                        <i class="fas fa-chart-bar" style="color: var(--accent);"></i>
+                    </div>
+                    <div class="panel-body">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">7</div>
+                                <div class="stat-label">Suites</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">30+</div>
+                                <div class="stat-label">Tools</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">100%</div>
+                                <div class="stat-label">Free</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">24/7</div>
+                                <div class="stat-label">Available</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Quick Links</span>
+                        <i class="fas fa-bolt" style="color: var(--accent);"></i>
+                    </div>
+                    <div class="panel-body">
+                        <div class="quick-links">
+                            <a href="suites/financial-calculators/sip-calculator/index.html" class="quick-link">
+                                <i class="fas fa-chart-line"></i>
+                                <span>SIP Calculator</span>
+                            </a>
+                            <a href="suites/loans/emi-calculator/index.html" class="quick-link">
+                                <i class="fas fa-calculator"></i>
+                                <span>EMI Calculator</span>
+                            </a>
+                            <a href="suites/currency-tools/currency-converter/index.html" class="quick-link">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>Currency Converter</span>
+                            </a>
+                            <a href="suites/taxes/income-tax/index.html" class="quick-link">
+                                <i class="fas fa-file-invoice"></i>
+                                <span>Income Tax Calculator</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Updates -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Recent Updates</span>
+                        <i class="fas fa-sync-alt" style="color: var(--accent);"></i>
+                    </div>
+                    <div class="panel-body">
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                <div style="color: var(--accent); font-size: 0.8rem;">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 500;">Financial Console Launched</div>
+                                    <div style="font-size: 0.8rem; color: var(--muted);">All 7 suites now available
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                <div style="color: var(--accent); font-size: 0.8rem;">
+                                    <i class="fas fa-plus-circle"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 500;">New: Portfolio Tracker</div>
+                                    <div style="font-size: 0.8rem; color: var(--muted);">Added to Investments suite
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                <div style="color: var(--accent); font-size: 0.8rem;">
+                                    <i class="fas fa-moon"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 500;">Theme Engine</div>
+                                    <div style="font-size: 0.8rem; color: var(--muted);">Dark/Light mode added</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="console-footer">
+            <p>Financial Console v1.0 · Part of Destiny Tracer Portfolio</p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted);">
+                All calculations are for informational purposes only. Consult a financial advisor for professional
+                advice.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            document.body.setAttribute('data-theme', newTheme);
+            themeIcon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+
+            // Save preference
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-theme', savedTheme);
+        themeIcon.className = savedTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('mobile-hidden');
+        }
+    </script>
+</body>
+
+</html>

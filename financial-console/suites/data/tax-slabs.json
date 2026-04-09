@@ -1,0 +1,203 @@
+{
+  "taxYear": "2024-25",
+  "currency": "INR",
+  "regimes": {
+    "newRegime": {
+      "name": "New Tax Regime (Default)",
+      "description": "Lower tax rates with limited deductions",
+      "standardDeduction": 75000,
+      "slabs": [
+        {
+          "min": 0,
+          "max": 300000,
+          "rate": 0,
+          "cumulativeTax": 0
+        },
+        {
+          "min": 300001,
+          "max": 600000,
+          "rate": 5,
+          "cumulativeTax": 15000
+        },
+        {
+          "min": 600001,
+          "max": 900000,
+          "rate": 10,
+          "cumulativeTax": 45000
+        },
+        {
+          "min": 900001,
+          "max": 1200000,
+          "rate": 15,
+          "cumulativeTax": 90000
+        },
+        {
+          "min": 1200001,
+          "max": 1500000,
+          "rate": 20,
+          "cumulativeTax": 150000
+        },
+        {
+          "min": 1500001,
+          "max": null,
+          "rate": 30,
+          "cumulativeTax": null
+        }
+      ]
+    },
+    "oldRegime": {
+      "name": "Old Tax Regime",
+      "description": "Higher tax rates with full deductions",
+      "standardDeduction": 50000,
+      "slabs": [
+        {
+          "min": 0,
+          "max": 250000,
+          "rate": 0,
+          "cumulativeTax": 0
+        },
+        {
+          "min": 250001,
+          "max": 500000,
+          "rate": 5,
+          "cumulativeTax": 12500
+        },
+        {
+          "min": 500001,
+          "max": 1000000,
+          "rate": 20,
+          "cumulativeTax": 112500
+        },
+        {
+          "min": 1000001,
+          "max": null,
+          "rate": 30,
+          "cumulativeTax": null
+        }
+      ]
+    }
+  },
+  "deductions": {
+    "section80C": {
+      "name": "Section 80C",
+      "limit": 150000,
+      "description": "Investments in PPF, ELSS, EPF, Life Insurance, etc."
+    },
+    "section80D": {
+      "name": "Section 80D",
+      "limit": {
+        "self": 25000,
+        "parents": 50000,
+        "seniorParents": 75000
+      },
+      "description": "Health Insurance Premium"
+    },
+    "section80CCD": {
+      "name": "Section 80CCD(1B)",
+      "limit": 50000,
+      "description": "Additional NPS contribution"
+    },
+    "hra": {
+      "name": "House Rent Allowance",
+      "description": "Minimum of: 1. Actual HRA received, 2. Rent paid - 10% of salary, 3. 50% of salary (metro) or 40% (non-metro)"
+    },
+    "standardDeduction": {
+      "name": "Standard Deduction",
+      "limit": 50000,
+      "description": "Available to salaried individuals"
+    }
+  },
+  "gstSlabs": {
+    "nil": {
+      "rate": 0,
+      "description": "Essential food items, fresh vegetables, milk, etc."
+    },
+    "fivePercent": {
+      "rate": 5,
+      "description": "Packaged food items, apparel below ₹1000, footwear below ₹500"
+    },
+    "twelvePercent": {
+      "rate": 12,
+      "description": "Processed foods, computers, mobile phones"
+    },
+    "eighteenPercent": {
+      "rate": 18,
+      "description": "Soaps, toothpaste, capital goods, industrial intermediaries"
+    },
+    "twentyEightPercent": {
+      "rate": 28,
+      "description": "Luxury items, automobiles, aerated drinks, tobacco"
+    }
+  },
+  "capitalGains": {
+    "equity": {
+      "stcg": {
+        "holdingPeriod": "Less than 12 months",
+        "rate": 15,
+        "description": "Short Term Capital Gains on equity"
+      },
+      "ltcg": {
+        "holdingPeriod": "More than 12 months",
+        "rate": 10,
+        "exemption": 100000,
+        "description": "Long Term Capital Gains on equity (above ₹1 lakh)"
+      }
+    },
+    "debt": {
+      "stcg": {
+        "holdingPeriod": "Less than 36 months",
+        "rate": "Income tax slab rate",
+        "description": "Short Term Capital Gains on debt funds"
+      },
+      "ltcg": {
+        "holdingPeriod": "More than 36 months",
+        "rate": 20,
+        "indexation": true,
+        "description": "Long Term Capital Gains on debt funds (with indexation benefit)"
+      }
+    },
+    "realEstate": {
+      "stcg": {
+        "holdingPeriod": "Less than 24 months",
+        "rate": "Income tax slab rate",
+        "description": "Short Term Capital Gains on property"
+      },
+      "ltcg": {
+        "holdingPeriod": "More than 24 months",
+        "rate": 20,
+        "indexation": true,
+        "description": "Long Term Capital Gains on property (with indexation benefit)"
+      }
+    }
+  },
+  "tds": {
+    "salary": {
+      "rate": "As per income tax slab",
+      "threshold": 250000,
+      "description": "Tax deducted by employer"
+    },
+    "interest": {
+      "bank": {
+        "rate": 10,
+        "threshold": 40000,
+        "description": "Interest on savings account"
+      },
+      "fd": {
+        "rate": 10,
+        "threshold": 40000,
+        "description": "Interest on fixed deposits"
+      }
+    },
+    "commission": {
+      "rate": 5,
+      "threshold": 15000,
+      "description": "Commission or brokerage"
+    }
+  },
+  "metadata": {
+    "lastUpdated": "2024-03-15",
+    "source": "CBDT & GST Council",
+    "notes": "Tax slabs are for individuals below 60 years. Senior citizens have different thresholds.",
+    "disclaimer": "This information is for reference only. Consult a tax professional for accurate calculations."
+  }
+}

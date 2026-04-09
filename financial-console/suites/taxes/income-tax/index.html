@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income Tax Calculator | Taxes Suite</title>
+    <style>
+        :root {
+            --bg: #0f0f23;
+            --panel: #1a1a2e;
+            --border: #2d2d4d;
+            --text: #e0e0ff;
+            --muted: #8a8ac4;
+            --accent: #a855f7;
+            --accent-soft: rgba(168, 85, 247, 0.16);
+            --radius: 10px;
+            --transition-fast: 0.2s ease;
+            --transition: 0.3s ease;
+            --old-regime-color: #ef4444;
+            --new-regime-color: #3b82f6;
+            --new-future-color: #10b981;
+        }
+
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --accent: #9333ea;
+            --accent-soft: rgba(147, 51, 234, 0.1);
+            --old-regime-color: #dc2626;
+            --new-regime-color: #2563eb;
+            --new-future-color: #059669;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            transition: background-color var(--transition);
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all var(--transition);
+        }
+
+        .brand {
+            margin-bottom: 2rem;
+        }
+
+        .brand-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+        }
+
+        .brand-subtitle {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-top: 0.5rem;
+        }
+
+        .meta-lines {
+            background: var(--accent-soft);
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            border: 1px solid var(--border);
+        }
+
+        .meta-lines span {
+            display: block;
+            color: var(--text);
+        }
+
+        .meta-lines .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .nav-items {
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--accent-soft);
+            border-color: var(--border);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .workspace-pill {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), transparent);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent);
+            border: 1px solid var(--accent-soft);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            max-width: calc(100% - 260px);
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .page-info h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .page-info p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .topbar-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .back-btn {
+            padding: 0.75rem 1.25rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all var(--transition-fast);
+        }
+
+        .back-btn:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+        }
+
+        .theme-toggle {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+        }
+
+        /* Calculator Layout */
+        .calculator-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, var(--accent-soft), transparent);
+        }
+
+        .panel-body {
+            padding: 1.5rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: var(--radius) var(--radius) 0 0;
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+
+        .tab:hover {
+            color: var(--text);
+            background: var(--accent-soft);
+        }
+
+        .tab.active {
+            color: var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        /* Regime Selection */
+        .regime-selection {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .regime-option {
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .regime-option:hover {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .regime-option.selected {
+            border-color: var(--regime-color);
+            background: color-mix(in srgb, var(--regime-color) 10%, transparent);
+        }
+
+        .regime-option.old-regime {
+            --regime-color: var(--old-regime-color);
+        }
+
+        .regime-option.new-regime {
+            --regime-color: var(--new-regime-color);
+        }
+
+        .regime-option.new-future {
+            --regime-color: var(--new-future-color);
+        }
+
+        .regime-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--regime-color);
+        }
+
+        .regime-year {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* Input Groups */
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .input-with-unit {
+            position: relative;
+        }
+
+        .input-with-unit input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 1rem;
+            transition: all var(--transition-fast);
+        }
+
+        .input-with-unit input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        .unit {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+
+        /* Deduction Sections */
+        .deduction-section {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .deduction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+
+        .deduction-title {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .deduction-toggle {
+            color: var(--muted);
+            transition: transform var(--transition-fast);
+        }
+
+        .deduction-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Buttons */
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.85rem 1.5rem;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #9333ea);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 85, 247, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+        }
+
+        /* Results Panel */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-label {
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        .comparison-table th {
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-weight: 600;
+            padding: 1rem;
+            text-align: left;
+            border: 1px solid var(--border);
+        }
+
+        .comparison-table td {
+            padding: 1rem;
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: var(--bg);
+        }
+
+        .regime-column {
+            font-weight: 600;
+        }
+
+        .old-regime-col {
+            color: var(--old-regime-color);
+        }
+
+        .new-regime-col {
+            color: var(--new-regime-color);
+        }
+
+        .future-regime-col {
+            color: var(--new-future-color);
+        }
+
+        .tax-saving {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* Tax Slab Display */
+        .tax-slab-display {
+            margin-top: 1.5rem;
+        }
+
+        .slab-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .slab-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .slab-range {
+            font-weight: 500;
+        }
+
+        .slab-rate {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .calculator-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+                padding: 1rem;
+            }
+            
+            .brand-title, .brand-subtitle, .meta-lines, .nav-item span {
+                display: none;
+            }
+            
+            .nav-item {
+                justify-content: center;
+                padding: 0.75rem;
+            }
+            
+            .nav-item i {
+                margin: 0;
+            }
+            
+            .main-content {
+                margin-left: 60px;
+                max-width: calc(100% - 60px);
+                padding: 1rem;
+            }
+            
+            .regime-selection {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body data-theme="dark">
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <div class="brand">
+            <div class="brand-title">Finance Console</div>
+            <div class="brand-subtitle">Financial Tools & Personal Wealth Calculators</div>
+        </div>
+        
+        <div class="meta-lines">
+            <span class="highlight">Wealth Planning · Tax Optimization · ROI · Investments</span>
+            <span>SIP · SWP · FD · RD · Loans · Forex · Gold · Solar</span>
+        </div>
+        
+        <div class="nav-items">
+            <a href="../../../../index.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="../../financial-calculators/index.html" class="nav-item">
+                <i class="fas fa-calculator"></i>
+                <span>Financial Calculators</span>
+            </a>
+            <a href="../../investments/index.html" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Investments</span>
+            </a>
+            <a href="../../loans/index.html" class="nav-item">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>Loans</span>
+            </a>
+            <a href="../index.html" class="nav-item active">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Taxes</span>
+            </a>
+            <a href="../../currency-tools/index.html" class="nav-item">
+                <i class="fas fa-globe"></i>
+                <span>Currency Tools</span>
+            </a>
+            <a href="../../gold-metals/index.html" class="nav-item">
+                <i class="fas fa-gem"></i>
+                <span>Gold & Metals</span>
+            </a>
+            <a href="../../solar-power/index.html" class="nav-item">
+                <i class="fas fa-solar-panel"></i>
+                <span>Solar Power</span>
+            </a>
+            <a href="../../../../../index.html" class="nav-item">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Portfolio</span>
+            </a>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="workspace-pill">Income Tax Calculator</div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="page-info">
+                <h1>Income Tax Calculator</h1>
+                <p>Compare Old Regime vs New Regime (2025-26, 2026-27) with full deductions</p>
+            </div>
+            
+            <div class="topbar-controls">
+                <a href="../index.html" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Taxes
+                </a>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Calculator Layout -->
+        <div class="calculator-layout">
+            <!-- Input Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Income & Deductions</span>
+                    <i class="fas fa-edit"></i>
+                </div>
+                <div class="panel-body">
+                    <!-- Tabs -->
+                    <div class="tabs">
+                        <button class="tab active" data-tab="basic">Basic Details</button>
+                        <button class="tab" data-tab="deductions">Deductions</button>
+                        <button class="tab" data-tab="advanced">Advanced</button>
+                    </div>
+                    
+                    <!-- Basic Details Tab -->
+                    <div id="basic-tab" class="tab-content active">
+                        <!-- Regime Selection -->
+                        <div class="regime-selection">
+                            <div class="regime-option old-regime selected" data-regime="old">
+                                <div class="regime-name">Old Regime</div>
+                                <div class="regime-year">Full Deductions</div>
+                            </div>
+                            <div class="regime-option new-regime" data-regime="new-2025">
+                                <div class="regime-name">New Regime</div>
+                                <div class="regime-year">2025-26</div>
+                            </div>
+                            <div class="regime-option new-future" data-regime="new-2026">
+                                <div class="regime-name">New Regime</div>
+                                <div class="regime-year">2026-27</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Income Inputs -->
+                        <div class="input-group">
+                            <label>Gross Annual Income (₹)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="grossIncome" value="1200000" min="0" max="100000000" step="10000">
+                                <span class="unit">₹</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Standard Deduction (₹)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="standardDeduction" value="50000" min="0" max="100000" step="1000">
+                                <span class="unit">₹</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Age Group</label>
+                            <select id="ageGroup" class="input-with-unit" style="padding: 0.85rem 1rem; width: 100%;">
+                                <option value="below-60">Below 60 years</option>
+                                <option value="60-80">60 to 80 years (Senior Citizen)</option>
+                                <option value="above-80">Above 80 years (Super Senior)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Deductions Tab -->
+                    <div id="deductions-tab" class="tab-content" style="display: none;">
+                        <!-- Section 80C -->
+                        <div class="deduction-section">
+                            <div class="deduction-header">
+                                <div class="deduction-title">
+                                    <i class="fas fa-piggy-bank"></i> Section 80C (Max ₹1,50,000)
+                                </div>
+                                <div class="deduction-toggle">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="deduction-content">
+                                <div class="input-group">
+                                    <label>EPF/PPF Contribution (₹)</label>
+                                    <input type="number" id="epfContribution" value="50000" min="0" max="150000" step="1000">
+                                </div>
+                                <div class="input-group">
+                                    <label>Life Insurance Premium (₹)</label>
+                                    <input type="number" id="insurancePremium" value="30000" min="0" max="150000" step="1000">
+                                </div>
+                                <div class="input-group">
+                                    <label>ELSS/NPS (₹)</label>
+                                    <input type="number" id="elssContribution" value="20000" min="0" max="150000" step="1000">
+                                </div>
+                                <div class="input-group">
+                                    <label>Others (₹)</label>
+                                    <input type="number" id="other80C" value="50000" min="0" max="150000" step="1000">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section 80D -->
+                        <div class="deduction-section">
+                            <div class="deduction-header">
+                                <div class="deduction-title">
+                                    <i class="fas fa-heartbeat"></i> Section 80D - Health Insurance
+                                </div>
+                                <div class="deduction-toggle">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="deduction-content">
+                                <div class="input-group">
+                                    <label>Self & Family (₹)</label>
+                                    <input type="number" id="healthInsuranceSelf" value="25000" min="0" max="50000" step="1000">
+                                </div>
+                                <div class="input-group">
+                                    <label>Parents (<60 years) (₹)</label>
+                                    <input type="number" id="healthInsuranceParents" value="25000" min="0" max="50000" step="1000">
+                                </div>
+                                <div class="input-group">
+                                    <label>Parents (Senior) (₹)</label>
+                                    <input type="number" id="healthInsuranceSeniorParents" value="0" min="0" max="75000" step="1000">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- HRA -->
+                        <div class="deduction-section">
+                            <div class="deduction-header">
+                                <div class="deduction-title">
+                                    <i class="fas fa-home"></i> House Rent Allowance
+                                </div>
+                                <div class="deduction-toggle">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="deduction-content">
+                                <div class="input-group">
+                                    <label>Basic Salary (₹)</label>
+                                    <input type="number" id="basicSalary" value="600000" min="0" max="5000000" step="10000">
+                                </div>
+                                <div class="input-group">
+                                    <label>HRA Received (₹)</label>
+                                    <input type="number" id="hraReceived" value="120000" min="0" max="1000000" step="10000">
+                                </div>
+                                <div class="input-group">
+                                    <label>Rent Paid (₹)</label>
+                                    <input type="number" id="rentPaid" value="180000" min="0" max="1000000" step="10000">
+                                </div>
+                                <div class="input-group">
+                                    <label>City Type</label>
+                                    <select id="cityType" style="padding: 0.85rem 1rem; width: 100%;">
+                                        <option value="metro">Metro (50% of basic)</option>
+                                        <option value="non-metro">Non-Metro (40% of basic)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Other Deductions -->
+                        <div class="deduction-section">
+                            <div class="deduction-header">
+                                <div class="deduction-title">
+                                    <i class="fas fa-list-alt"></i> Other Deductions
+                                </div>
+                                <div class="deduction-toggle">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            <div class="deduction-content">
+                                <div class="input-group">
+                                    <label>NPS Additional (80CCD(1B)) (₹)</label>
+                                    <input type="number" id="npsAdditional" value="0" min="0" max="50000" step="1000">
+                                </div>
+                                <div class="input-group">
+                                    <label>Education Loan Interest (80E) (₹)</label>
+                                    <input type="number" id="eduLoanInterest" value="0" min="0" max="200000" step="1000">
+                                </div>
+                                <div class="input-group">
+                                    <label>Home Loan Interest (24B) (₹)</label>
+                                    <input type="number" id="homeLoanInterest" value="0" min="0" max="200000" step="1000">
+                                </div>
+                                <div class="input-group">
+                                    <label>Donations (80G) (₹)</label>
+                                    <input type="number" id="donations" value="0" min="0" max="100000" step="1000">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Tab -->
+                    <div id="advanced-tab" class="tab-content" style="display: none;">
+                        <div class="input-group">
+                            <label>Professional Tax (₹)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="professionalTax" value="2500" min="0" max="10000" step="500">
+                                <span class="unit">₹</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Previous Year Losses (₹)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="previousLosses" value="0" min="0" max="1000000" step="10000">
+                                <span class="unit">₹</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Rebate under Section 87A (₹)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="rebate" value="0" min="0" max="12500" step="100">
+                                <span class="unit">₹</span>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Surcharge (%)</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="surcharge" value="0" min="0" max="37" step="0.1">
+                                <span class="unit">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="buttons">
+                        <button class="btn btn-primary" id="calculateBtn">
+                            <i class="fas fa-calculator"></i> Calculate Tax
+                        </button>
+                        <button class="btn btn-secondary" id="resetBtn">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Tax Calculation Results</span>
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="panel-body">
+                    <!-- Tax Slab Display -->
+                    <div class="tax-slab-display">
+                        <h3 style="margin-bottom: 1rem; color: var(--accent);" id="slabTitle">Old Regime Tax Slabs</h3>
+                        <div class="slab-container" id="taxSlabsDisplay">
+                            <!-- Dynamic content will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Results Grid -->
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <div class="result-value" id="totalIncome">₹0</div>
+                            <div class="result-label">Total Income</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-value" id="totalDeductions">₹0</div>
+                            <div class="result-label">Total Deductions</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-value" id="taxableIncome">₹0</div>
+                            <div class="result-label">Taxable Income</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-value" id="totalTax">₹0</div>
+                            <div class="result-label">Total Tax</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Detailed Breakdown -->
+                    <div style="margin-top: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; color: var(--accent);">Tax Breakdown</h3>
+                        <div class="table-container">
+                            <table class="comparison-table">
+                                <thead>
+                                    <tr>
+                                        <th>Component</th>
+                                        <th>Amount (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="taxBreakdown">
+                                    <tr>
+                                        <td>Income Tax</td>
+                                        <td>0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Surcharge</td>
+                                        <td>0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Health & Education Cess</td>
+                                        <td>0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Rebate (87A)</td>
+                                        <td>0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Regime Comparison -->
+                    <div style="margin-top: 2rem;">
+                        <h3 style="margin-bottom: 1rem; color: var(--accent);">Regime Comparison (2026-27)</h3>
+                        <div class="table-container">
+                            <table class="comparison-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th class="old-regime-col">Old Regime</th>
+                                        <th class="future-regime-col">New Regime 2026-27</th>
+                                        <th class="tax-saving">Tax Saving</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="regimeComparison">
+                                    <tr>
+                                        <td>Taxable Income</td>
+                                        <td class="old-regime-col">0</td>
+                                        <td class="future-regime-col">0</td>
+                                        <td class="tax-saving">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Income Tax</td>
+                                        <td class="old-regime-col">0</td>
+                                        <td class="future-regime-col">0</td>
+                                        <td class="tax-saving">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Tax</td>
+                                        <td class="old-regime-col">0</td>
+                                        <td class="future-regime-col">0</td>
+                                        <td class="tax-saving">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Effective Tax Rate</td>
+                                        <td class="old-regime-col">0%</td>
+                                        <td class="future-regime-col">0%</td>
+                                        <td class="tax-saving">0%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="recommendation" style="margin-top: 1rem; padding: 1rem; background: var(--accent-soft); border-radius: var(--radius); border: 1px solid var(--border);">
+                            <strong style="color: var(--accent);">Recommendation:</strong>
+                            <span id="recommendationText">Calculate to see which regime is better for you</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Info Panel -->
+        <div class="panel" style="margin-top: 2rem;">
+            <div class="panel-header">
+                <span>About Income Tax Calculator</span>
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <div class="panel-body">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                    <div>
+                        <h4 style="color: var(--accent); margin-bottom: 0.75rem;">
+                            <i class="fas fa-balance-scale"></i> Old vs New Regime
+                        </h4>
+                        <ul style="font-size: 0.9rem; color: var(--muted); line-height: 1.6; padding-left: 1.2rem;">
+                            <li><strong>Old Regime:</strong> Higher tax rates but full deductions (80C, 80D, HRA, etc.)</li>
+                            <li><strong>New Regime 2025-26:</strong> Lower rates, limited deductions, standard deduction ₹75,000</li>
+                            <li><strong>New Regime 2026-27:</strong> Further simplified slabs, no deductions except standard</li>
+                            <li>Choose based on your investment pattern and income level</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: var(--accent); margin-bottom: 0.75rem;">
+                            <i class="fas fa-calculator"></i> Key Features
+                        </h4>
+                        <ul style="font-size: 0.9rem; color: var(--muted); line-height: 1.6; padding-left: 1.2rem;">
+                            <li>Compare all three tax regimes side-by-side</li>
+                            <li>Detailed deduction-wise breakdown</li>
+                            <li>HRA calculator with city-specific rules</li>
+                            <li>Senior citizen exemptions</li>
+                            <li>Surcharge and cess calculations</li>
+                            <li>Tax saving recommendations</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: var(--accent); margin-bottom: 0.75rem;">
+                            <i class="fas fa-lightbulb"></i> Tax Planning Tips
+                        </h4>
+                        <ul style="font-size: 0.9rem; color: var(--muted); line-height: 1.6; padding-left: 1.2rem;">
+                            <li>New regime better if investments < ₹2.5 lakhs</li>
+                            <li>Old regime beneficial for home loan/HRA claims</li>
+                            <li>Maximize 80C with PPF, ELSS, EPF</li>
+                            <li>Health insurance premium saves tax under 80D</li>
+                            <li>Plan investments before March 31st</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.body.setAttribute('data-theme', newTheme);
+            themeIcon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('theme', newTheme);
+        });
+        
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-theme', savedTheme);
+        themeIcon.className = savedTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        
+        // Tax Slabs Data
+        const taxSlabs = {
+            'old': {
+                name: 'Old Regime',
+                standardDeduction: 50000,
+                slabs: [
+                    { min: 0, max: 250000, rate: 0 },
+                    { min: 250001, max: 500000, rate: 5 },
+                    { min: 500001, max: 1000000, rate: 20 },
+                    { min: 1000001, max: null, rate: 30 }
+                ],
+                rebate: { limit: 500000, amount: 12500 },
+                surcharge: [
+                    { min: 5000000, max: 10000000, rate: 10 },
+                    { min: 10000001, max: 20000000, rate: 15 },
+                    { min: 20000001, max: 50000000, rate: 25 },
+                    { min: 50000001, max: null, rate: 37 }
+                ]
+            },
+            'new-2025': {
+                name: 'New Regime 2025-26',
+                standardDeduction: 75000,
+                slabs: [
+                    { min: 0, max: 300000, rate: 0 },
+                    { min: 300001, max: 600000, rate: 5 },
+                    { min: 600001, max: 900000, rate: 10 },
+                    { min: 900001, max: 1200000, rate: 15 },
+                    { min: 1200001, max: 1500000, rate: 20 },
+                    { min: 1500001, max: null, rate: 30 }
+                ],
+                rebate: { limit: 700000, amount: 0 },
+                surcharge: [
+                    { min: 5000000, max: 10000000, rate: 10 },
+                    { min: 10000001, max: 20000000, rate: 15 },
+                    { min: 20000001, max: 50000000, rate: 25 },
+                    { min: 50000001, max: null, rate: 37 }
+                ]
+            },
+            'new-2026': {
+                name: 'New Regime 2026-27',
+                standardDeduction: 75000,
+                slabs: [
+                    { min: 0, max: 400000, rate: 0 },
+                    { min: 400001, max: 800000, rate: 5 },
+                    { min: 800001, max: 1200000, rate: 10 },
+                    { min: 1200001, max: 1600000, rate: 15 },
+                    { min: 1600001, max: 2000000, rate: 20 },
+                    { min: 2000001, max: null, rate: 30 }
+                ],
+                rebate: { limit: 800000, amount: 0 },
+                surcharge: [
+                    { min: 5000000, max: 10000000, rate: 10 },
+                    { min: 10000001, max: 20000000, rate: 15 },
+                    { min: 20000001, max: 50000000, rate: 25 },
+                    { min: 50000001, max: null, rate: 37 }
+                ]
+            }
+        };
+        
+        // Senior Citizen Exemptions
+        const seniorExemptions = {
+            'below-60': { basic: 250000, rebateLimit: 500000 },
+            '60-80': { basic: 300000, rebateLimit: 500000 },
+            'above-80': { basic: 500000, rebateLimit: 500000 }
+        };
+        
+        // Tabs functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => {
+                    c.classList.remove('active');
+                    c.style.display = 'none';
+                });
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+                document.getElementById(`${tabId}-tab`).style.display = 'block';
+            });
+        });
+        
+        // Regime selection
+        let selectedRegime = 'old';
+        document.querySelectorAll('.regime-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.regime-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedRegime = option.getAttribute('data-regime');
+                updateTaxSlabDisplay();
+                calculateTax();
+            });
+        });
+        
+        // Deduction sections toggle
+        document.querySelectorAll('.deduction-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const toggle = header.querySelector('.deduction-toggle i');
+                
+                if (content.style.display === 'none' || content.style.display === '') {
+                    content.style.display = 'grid';
+                    toggle.className = 'fas fa-chevron-up';
+                } else {
+                    content.style.display = 'none';
+                    toggle.className = 'fas fa-chevron-down';
+                }
+            });
+        });
+        
+        // Update tax slab display
+        function updateTaxSlabDisplay() {
+            const regime = taxSlabs[selectedRegime];
+            const container = document.getElementById('taxSlabsDisplay');
+            const title = document.getElementById('slabTitle');
+            
+            title.textContent = `${regime.name} Tax Slabs`;
+            container.innerHTML = '';
+            
+            regime.slabs.forEach(slab => {
+                const slabItem = document.createElement('div');
+                slabItem.className = 'slab-item';
+                
+                const range = slab.max 
+                    ? `₹${formatNumber(slab.min)} - ₹${formatNumber(slab.max)}`
+                    : `Above ₹${formatNumber(slab.min)}`;
+                
+                slabItem.innerHTML = `
+                    <span class="slab-range">${range}</span>
+                    <span class="slab-rate">${slab.rate}%</span>
+                `;
+                container.appendChild(slabItem);
+            });
+        }
+        
+        // Format number with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        
+        // Format currency
+        function formatCurrency(amount) {
+            if (amount >= 10000000) {
+                return '₹' + (amount / 10000000).toFixed(2) + ' Cr';
+            } else if (amount >= 100000) {
+                return '₹' + (amount / 100000).toFixed(2) + ' L';
+            } else if (amount >= 1000) {
+                return '₹' + (amount / 1000).toFixed(1) + ' K';
+            }
+            return '₹' + amount.toLocaleString('en-IN');
+        }
+        
+        // Calculate HRA exemption
+        function calculateHRAExemption() {
+            const basicSalary = parseFloat(document.getElementById('basicSalary').value) || 0;
+            const hraReceived = parseFloat(document.getElementById('hraReceived').value) || 0;
+            const rentPaid = parseFloat(document.getElementById('rentPaid').value) || 0;
+            const cityType = document.getElementById('cityType').value;
+            
+            const hraPercentage = cityType === 'metro' ? 0.5 : 0.4;
+            const hra1 = hraReceived;
+            const hra2 = rentPaid - (basicSalary * 0.1);
+            const hra3 = basicSalary * hraPercentage;
+            
+            return Math.min(hra1, hra2, hra3);
+        }
+        
+        // Calculate total deductions
+        function calculateDeductions() {
+            // Section 80C
+            const epfContribution = parseFloat(document.getElementById('epfContribution').value) || 0;
+            const insurancePremium = parseFloat(document.getElementById('insurancePremium').value) || 0;
+            const elssContribution = parseFloat(document.getElementById('elssContribution').value) || 0;
+            const other80C = parseFloat(document.getElementById('other80C').value) || 0;
+            const total80C = Math.min(epfContribution + insurancePremium + elssContribution + other80C, 150000);
+            
+            // Section 80D
+            const healthInsuranceSelf = parseFloat(document.getElementById('healthInsuranceSelf').value) || 0;
+            const healthInsuranceParents = parseFloat(document.getElementById('healthInsuranceParents').value) || 0;
+            const healthInsuranceSeniorParents = parseFloat(document.getElementById('healthInsuranceSeniorParents').value) || 0;
+            const total80D = Math.min(healthInsuranceSelf, 25000) + 
+                            Math.min(healthInsuranceParents, 25000) + 
+                            Math.min(healthInsuranceSeniorParents, 75000);
+            
+            // HRA
+            const hraExemption = selectedRegime === 'old' ? calculateHRAExemption() : 0;
+            
+            // Other deductions
+            const npsAdditional = Math.min(parseFloat(document.getElementById('npsAdditional').value) || 0, 50000);
+            const eduLoanInterest = parseFloat(document.getElementById('eduLoanInterest').value) || 0;
+            const homeLoanInterest = Math.min(parseFloat(document.getElementById('homeLoanInterest').value) || 0, 200000);
+            const donations = parseFloat(document.getElementById('donations').value) || 0;
+            
+            return {
+                section80C: total80C,
+                section80D: total80D,
+                hra: hraExemption,
+                npsAdditional: npsAdditional,
+                eduLoanInterest: eduLoanInterest,
+                homeLoanInterest: homeLoanInterest,
+                donations: donations,
+                total: total80C + total80D + hraExemption + npsAdditional + eduLoanInterest + homeLoanInterest + donations
+            };
+        }
+        
+        // Calculate tax for a given regime
+        function calculateTaxForRegime(regimeKey, grossIncome, deductions, ageGroup) {
+            const regime = taxSlabs[regimeKey];
+            const ageExemption = seniorExemptions[ageGroup].basic;
+            
+            // Standard deduction
+            const standardDeduction = regime.standardDeduction;
+            
+            // Total deductions (only for old regime)
+            const totalDeductions = regimeKey === 'old' ? deductions.total + standardDeduction : standardDeduction;
+            
+            // Taxable income
+            const taxableIncome = Math.max(0, grossIncome - totalDeductions - ageExemption);
+            
+            // Calculate tax using slabs
+            let tax = 0;
+            let remainingIncome = taxableIncome;
+            
+            for (let i = 0; i < regime.slabs.length; i++) {
+                const slab = regime.slabs[i];
+                if (remainingIncome <= 0) break;
+                
+                if (slab.max === null || remainingIncome <= (slab.max - slab.min + 1)) {
+                    tax += remainingIncome * (slab.rate / 100);
+                    break;
+                } else {
+                    const slabIncome = slab.max - slab.min + 1;
+                    tax += slabIncome * (slab.rate / 100);
+                    remainingIncome -= slabIncome;
+                }
+            }
+            
+            // Apply rebate (only for old regime)
+            if (regimeKey === 'old' && taxableIncome <= regime.rebate.limit) {
+                tax = Math.max(0, tax - regime.rebate.amount);
+            }
+            
+            // Apply surcharge if applicable
+            let surcharge = 0;
+            if (taxableIncome > 5000000) {
+                for (const surchargeSlab of regime.surcharge) {
+                    if (surchargeSlab.max === null || taxableIncome <= surchargeSlab.max) {
+                        surcharge = tax * (surchargeSlab.rate / 100);
+                        break;
+                    }
+                }
+            }
+            
+            // Health and Education Cess (4%)
+            const cess = (tax + surcharge) * 0.04;
+            
+            // Professional tax
+            const professionalTax = parseFloat(document.getElementById('professionalTax').value) || 0;
+            
+            // Total tax
+            const totalTax = Math.max(0, tax + surcharge + cess - professionalTax);
+            
+            return {
+                grossIncome,
+                deductions: totalDeductions,
+                ageExemption,
+                taxableIncome,
+                tax,
+                surcharge,
+                cess,
+                professionalTax,
+                totalTax,
+                effectiveRate: (totalTax / grossIncome) * 100
+            };
+        }
+        
+        // Main tax calculation
+        function calculateTax() {
+            const grossIncome = parseFloat(document.getElementById('grossIncome').value) || 0;
+            const ageGroup = document.getElementById('ageGroup').value;
+            const deductions = calculateDeductions();
+            
+            // Calculate for selected regime
+            const selectedResult = calculateTaxForRegime(selectedRegime, grossIncome, deductions, ageGroup);
+            
+            // Calculate for comparison (old vs new 2026)
+            const oldResult = calculateTaxForRegime('old', grossIncome, deductions, ageGroup);
+            const new2026Result = calculateTaxForRegime('new-2026', grossIncome, deductions, ageGroup);
+            
+            // Update selected regime results
+            document.getElementById('totalIncome').textContent = formatCurrency(selectedResult.grossIncome);
+            document.getElementById('totalDeductions').textContent = formatCurrency(selectedResult.deductions);
+            document.getElementById('taxableIncome').textContent = formatCurrency(selectedResult.taxableIncome);
+            document.getElementById('totalTax').textContent = formatCurrency(selectedResult.totalTax);
+            
+            // Update tax breakdown
+            const breakdown = document.getElementById('taxBreakdown');
+            breakdown.innerHTML = `
+                <tr>
+                    <td>Income Tax (before rebate)</td>
+                    <td>${formatCurrency(selectedResult.tax)}</td>
+                </tr>
+                <tr>
+                    <td>Surcharge</td>
+                    <td>${formatCurrency(selectedResult.surcharge)}</td>
+                </tr>
+                <tr>
+                    <td>Health & Education Cess (4%)</td>
+                    <td>${formatCurrency(selectedResult.cess)}</td>
+                </tr>
+                <tr>
+                    <td>Professional Tax</td>
+                    <td>${formatCurrency(selectedResult.professionalTax)}</td>
+                </tr>
+                <tr style="font-weight: 600; color: var(--accent);">
+                    <td>Total Tax Payable</td>
+                    <td>${formatCurrency(selectedResult.totalTax)}</td>
+                </tr>
+            `;
+            
+            // Update regime comparison
+            const taxSaving = oldResult.totalTax - new2026Result.totalTax;
+            const recommendationText = taxSaving > 0 
+                ? `New Regime 2026-27 saves you ${formatCurrency(taxSaving)} compared to Old Regime`
+                : `Old Regime saves you ${formatCurrency(-taxSaving)} compared to New Regime 2026-27`;
+            
+            document.getElementById('recommendationText').textContent = recommendationText;
+            
+            const comparison = document.getElementById('regimeComparison');
+            comparison.innerHTML = `
+                <tr>
+                    <td>Taxable Income</td>
+                    <td class="old-regime-col">${formatCurrency(oldResult.taxableIncome)}</td>
+                    <td class="future-regime-col">${formatCurrency(new2026Result.taxableIncome)}</td>
+                    <td class="tax-saving">${formatCurrency(new2026Result.taxableIncome - oldResult.taxableIncome)}</td>
+                </tr>
+                <tr>
+                    <td>Income Tax</td>
+                    <td class="old-regime-col">${formatCurrency(oldResult.tax)}</td>
+                    <td class="future-regime-col">${formatCurrency(new2026Result.tax)}</td>
+                    <td class="tax-saving">${formatCurrency(new2026Result.tax - oldResult.tax)}</td>
+                </tr>
+                <tr>
+                    <td>Total Tax</td>
+                    <td class="old-regime-col">${formatCurrency(oldResult.totalTax)}</td>
+                    <td class="future-regime-col">${formatCurrency(new2026Result.totalTax)}</td>
+                    <td class="tax-saving">${taxSaving > 0 ? `Save ${formatCurrency(taxSaving)}` : `Pay ${formatCurrency(-taxSaving)} more`}</td>
+                </tr>
+                <tr>
+                    <td>Effective Tax Rate</td>
+                    <td class="old-regime-col">${oldResult.effectiveRate.toFixed(2)}%</td>
+                    <td class="future-regime-col">${new2026Result.effectiveRate.toFixed(2)}%</td>
+                    <td class="tax-saving">${(new2026Result.effectiveRate - oldResult.effectiveRate).toFixed(2)}%</td>
+                </tr>
+            `;
+        }
+        
+        // Event Listeners
+        document.getElementById('calculateBtn').addEventListener('click', calculateTax);
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            // Reset all inputs to default values
+            document.getElementById('grossIncome').value = 1200000;
+            document.getElementById('standardDeduction').value = 50000;
+            document.getElementById('ageGroup').value = 'below-60';
+            document.getElementById('epfContribution').value = 50000;
+            document.getElementById('insurancePremium').value = 30000;
+            document.getElementById('elssContribution').value = 20000;
+            document.getElementById('other80C').value = 50000;
+            document.getElementById('healthInsuranceSelf').value = 25000;
+            document.getElementById('healthInsuranceParents').value = 25000;
+            document.getElementById('healthInsuranceSeniorParents').value = 0;
+            document.getElementById('basicSalary').value = 600000;
+            document.getElementById('hraReceived').value = 120000;
+            document.getElementById('rentPaid').value = 180000;
+            document.getElementById('cityType').value = 'metro';
+            document.getElementById('npsAdditional').value = 0;
+            document.getElementById('eduLoanInterest').value = 0;
+            document.getElementById('homeLoanInterest').value = 0;
+            document.getElementById('donations').value = 0;
+            document.getElementById('professionalTax').value = 2500;
+            document.getElementById('previousLosses').value = 0;
+            document.getElementById('rebate').value = 0;
+            document.getElementById('surcharge').value = 0;
+            
+            // Reset regime selection
+            document.querySelectorAll('.regime-option').forEach(o => o.classList.remove('selected'));
+            document.querySelector('.regime-option.old-regime').classList.add('selected');
+            selectedRegime = 'old';
+            
+            // Recalculate
+            updateTaxSlabDisplay();
+            calculateTax();
+        });
+        
+        // Auto-calculate on input change
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                calculateTax();
+            });
+        });
+        
+        // Initialize
+        updateTaxSlabDisplay();
+        calculateTax();
+    </script>
+</body>
+</html>

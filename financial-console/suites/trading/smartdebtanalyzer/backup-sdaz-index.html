@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Smart Debt Analyzer | Smart Financial Dashboard</title>
+    <!-- Google Fonts & Chart.js -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Canvas Confetti for celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 10% 20%, rgba(10, 20, 40, 0.95), rgba(2, 10, 22, 0.98));
+            min-height: 100vh;
+            color: #f0f3fa;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* animated gradient mesh overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 40% 60%, rgba(99, 102, 241, 0.15), transparent 70%),
+                radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.1), transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px 28px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Glassmorphism core */
+        .glass-card,
+        .section,
+        .stat-card,
+        .loan-item,
+        .saving-item,
+        .modal-content,
+        .comparison-box,
+        .strategy-card {
+            background: rgba(18, 28, 40, 0.55);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .glass-card:hover,
+        .loan-item:hover,
+        .saving-item:hover {
+            background: rgba(28, 40, 58, 0.7);
+            border-color: rgba(99, 102, 241, 0.5);
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 28px 40px -18px rgba(0, 0, 0, 0.5);
+        }
+
+        .section {
+            padding: 28px 30px;
+            margin-bottom: 32px;
+            transition: transform 0.2s, opacity 0.5s;
+        }
+
+        /* Scroll reveal animation */
+        .section.reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.7s ease, transform 0.6s ease;
+        }
+
+        .section.reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        h1 {
+            font-size: 2.6rem;
+            background: linear-gradient(135deg, #FFFFFF, #A5B4FC, #6EE7B7);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: textPulse 4s infinite alternate;
+        }
+
+        @keyframes textPulse {
+            0% {
+                background-size: 100%;
+                opacity: 0.95;
+            }
+
+            100% {
+                background-size: 150%;
+                opacity: 1;
+                text-shadow: 0 0 8px rgba(110, 231, 183, 0.3);
+            }
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #b9c7d9;
+            border-left: 3px solid #10b981;
+            padding-left: 12px;
+            margin-top: 8px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 22px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.2px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(105deg, #6366f1, #8b5cf6);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(105deg, #10b981, #14b8a6);
+        }
+
+        .btn-info {
+            background: linear-gradient(105deg, #3b82f6, #2563eb);
+        }
+
+        .btn-warning {
+            background: linear-gradient(105deg, #f59e0b, #d97706);
+        }
+
+        .btn-emerald {
+            background: linear-gradient(105deg, #059669, #34d399);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+            box-shadow: 0 12px 20px -12px black;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            padding: 22px 20px;
+            border-radius: 28px;
+            transition: all 0.2s;
+        }
+
+        .stat-value {
+            font-size: 2.3rem;
+            font-weight: 800;
+            margin-top: 8px;
+            letter-spacing: -1px;
+            background: linear-gradient(115deg, #f0f9ff, #cbd5e6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 500;
+            opacity: 0.7;
+            letter-spacing: 1px;
+        }
+
+        /* gauge + radar container */
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 28px;
+            margin-bottom: 40px;
+        }
+
+        .gauge-container,
+        .radar-container {
+            background: rgba(18, 28, 40, 0.55);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        canvas {
+            max-height: 280px;
+            width: 100%;
+        }
+
+        .grid-2,
+        .grid-3,
+        .grid-4 {
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+
+        input,
+        select {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 12px 16px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+        }
+
+        .total-box {
+            margin-top: 24px;
+            padding: 20px;
+            border-radius: 24px;
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .priority-badge {
+            background: #8b5cf6;
+            border-radius: 40px;
+            padding: 4px 14px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #10b981, #34d399);
+            width: 0%;
+            height: 100%;
+            border-radius: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .toast-message {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1e293b;
+            backdrop-filter: blur(16px);
+            border-left: 4px solid #10b981;
+            border-radius: 20px;
+            padding: 12px 24px;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(60px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 720px) {
+            .container {
+                padding: 16px;
+            }
+
+            .stat-value {
+                font-size: 1.6rem;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #6366f1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header glass -->
+        <div class="glass-card" style="padding: 28px 32px; margin-bottom: 32px;">
+            <div
+                style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; align-items: center;">
+                <div>
+                    <h1>⚡ Smart Debt Analyzer</h1>
+                    <p class="subtitle">glassmorphic intelligence · real-time debt clarity</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="exportCSV()">📥 CSV</button>
+                    <button class="btn btn-info" onclick="window.print()">🖨️ Print</button>
+                    <button class="btn btn-warning" onclick="exportPDF()">📄 PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Income & Expenses sections (simplified same logic but more elegant) -->
+        <div class="section reveal" id="incomeSection">
+            <h2 style="margin-bottom: 20px;">💵 Income streams</h2>
+            <div class="grid-3">
+                <input type="number" id="salary" placeholder="Salary" oninput="refreshAll()">
+                <input type="number" id="rental" placeholder="Rental" oninput="refreshAll()">
+                <input type="number" id="bankSavings" placeholder="Bank savings interest" oninput="refreshAll()">
+                <input type="number" id="spouse" placeholder="Spouse income" oninput="refreshAll()">
+                <input type="number" id="parental" placeholder="Parental support" oninput="refreshAll()">
+                <input type="number" id="miscIncome" placeholder="Miscellaneous" oninput="refreshAll()">
+            </div>
+            <div class="total-box total-box-income"><span class="total-label">💰 Total Monthly Income</span>
+                <div class="stat-value" id="totalIncomeDisplay">₹0</div>
+            </div>
+        </div>
+
+        <div class="section reveal">
+            <h2>💳 Monthly Expenses</h2>
+            <div class="grid-4">
+                <input type="number" id="groceries" placeholder="Groceries" oninput="refreshAll()"><input type="number"
+                    id="communication" placeholder="Comm" oninput="refreshAll()">
+                <input type="number" id="eb" placeholder="Electricity" oninput="refreshAll()"><input type="number"
+                    id="rent" placeholder="Rent" oninput="refreshAll()">
+                <input type="number" id="maintenance" placeholder="Maintenance" oninput="refreshAll()"><input
+                    type="number" id="fuel" placeholder="Fuel" oninput="refreshAll()">
+                <input type="number" id="medical" placeholder="Medical" oninput="refreshAll()"><input type="number"
+                    id="miscExpense" placeholder="Misc" oninput="refreshAll()">
+            </div>
+            <div class="total-box"><span>📉 Total Expenses</span>
+                <div class="stat-value" id="totalExpensesDisplay">₹0</div>
+            </div>
+        </div>
+
+        <!-- Stats cards animated counters -->
+        <div class="stats-cards" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-label">📆 Total EMI</div>
+                <div class="stat-value" id="statEMI">₹0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">⚠️ Outstanding</div>
+                <div class="stat-value" id="statOutstanding">₹0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">✨ Disposable</div>
+                <div class="stat-value" id="statDisposable">₹0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🐖 Total Savings</div>
+                <div class="stat-value" id="statSavings">₹0</div>
+            </div>
+        </div>
+
+        <!-- Gauge + Radar Charts (visual diagrams) -->
+        <div class="insight-grid">
+            <div class="gauge-container">
+                <h3>📊 DTI Health Gauge</h3><canvas id="dtiGaugeCanvas" width="400" height="200"
+                    style="height:200px; width:100%"></canvas>
+                <p id="dtiText" style="text-align:center; margin-top:8px; font-weight:500;"></p>
+            </div>
+            <div class="radar-container">
+                <h3>⚡ Loan Stress Radar</h3><canvas id="loanRadarCanvas" style="height:240px; width:100%"></canvas>
+                <p style="font-size:12px; opacity:0.7">Interest rate vs remaining months (normalized)</p>
+            </div>
+        </div>
+
+        <!-- Cash Flow advanced chart -->
+        <div class="section reveal">
+            <h3>📈 Monthly Cash Flow Waterfall</h3>
+            <div style="height: 320px;"><canvas id="cashFlowChart"></canvas></div>
+        </div>
+
+        <!-- Extra payment comparison -->
+        <div class="section reveal">
+            <h3>🔄 Accelerate debt freedom</h3>
+            <div class="grid-2">
+                <input type="number" id="extraPayment" placeholder="Extra ₹ / month" oninput="calculateComparison()">
+                <select id="extraPaymentTarget" onchange="calculateComparison()">
+                    <option value="highest">Highest interest first</option>
+                    <option value="smallest">Snowball (smallest balance)</option>
+                </select>
+            </div>
+            <div id="comparisonResult" class="comparison-box" style="display:none; margin-top:20px;"></div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="btn-group" style="margin-bottom: 32px; gap: 16px;">
+            <button class="btn btn-primary" onclick="openLoanModal()">➕ Add New Loan</button>
+            <button class="btn btn-emerald" onclick="openSavingsModal()">🐷 Add Savings</button>
+        </div>
+
+        <!-- Loans List -->
+        <div class="section reveal">
+            <h2>📉 Loans · early closure priority</h2>
+            <div id="loansList">
+                <div class="empty-state">💼 No loans added yet</div>
+            </div>
+        </div>
+        <!-- Savings List -->
+        <div class="section reveal">
+            <h2>🐷 Savings portfolio</h2>
+            <div id="savingsList">
+                <div class="empty-state">🎯 No savings added</div>
+            </div>
+        </div>
+
+        <!-- Strategies -->
+        <div class="section reveal" id="strategyInputSection">
+            <h2>💡 Smart strategy lab</h2>
+            <div class="grid-2">
+                <select id="strategyType">
+                    <option value="">Select scenario</option>
+                    <option value="borrowing">Plan to borrow additional</option>
+                    <option value="settlement">Windfall / settlement</option>
+                </select>
+                <input type="number" id="strategyAmount" placeholder="Amount ₹" oninput="generateStrategies()">
+            </div>
+        </div>
+        <div class="section reveal" id="strategiesSection" style="display:none;">
+            <h2>✨ Personalized strategies</h2>
+            <div id="strategiesList"></div>
+        </div>
+        <div style="text-align:center; padding:20px; opacity:0.5;">Nexus Analyzer · AI-powered insights</div>
+    </div>
+
+    <!-- Modals (loan & savings) -->
+    <div id="loanModal" class="modal">
+        <div class="modal-content">
+            <h2>➕ New Loan</h2>
+            <div class="grid-2">
+                <select id="loanType">
+                    <option>Credit Card</option>
+                    <option>Personal Loan</option>
+                    <option>App Loan</option>
+                    <option>Motor Loan</option>
+                    <option>Housing Loan</option>
+                    <option>Gold Loan</option>
+                </select>
+                <input type="text" id="loanLender" placeholder="Lender">
+                <input type="number" id="loanPrincipal" placeholder="Principal ₹">
+                <input type="number" step="0.01" id="loanRate" placeholder="Rate % p.a">
+                <input type="number" id="loanTenure" placeholder="Tenure months">
+                <input type="number" id="loanPaid" placeholder="EMIs paid" value="0">
+            </div>
+            <div class="btn-group" style="margin-top:24px;"><button class="btn btn-success" onclick="addLoan()">Add
+                    Loan</button><button class="btn" onclick="closeLoanModal()">Cancel</button></div>
+        </div>
+    </div>
+
+    <div id="savingsModal" class="modal">
+        <div class="modal-content">
+            <h2>🐷 Add Savings</h2>
+            <div class="grid-2">
+                <select id="savingsType">
+                    <option>Fixed Deposit</option>
+                    <option>Mutual Funds</option>
+                    <option>SSY</option>
+                    <option>Chit Fund</option>
+                </select>
+                <input type="text" id="savingsInstitution" placeholder="Institution">
+                <input type="number" id="savingsAmount" placeholder="Current amount">
+                <input type="number" id="savingsContribution" placeholder="Monthly contribution">
+                <input type="text" id="savingsGoal" placeholder="Goal / Maturity">
+            </div>
+            <div class="btn-group"><button class="btn btn-emerald" onclick="addSaving()">Save</button><button
+                    class="btn" onclick="closeSavingsModal()">Cancel</button></div>
+        </div>
+    </div>
+
+    <div id="calendarModal" class="modal">
+        <div class="modal-content">
+            <h2>📅 EMI Schedule</h2>
+            <div id="calendarContent"></div><button class="btn" onclick="closeCalendarModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // ----- DATA -----
+        let loans = [];
+        let savings = [];
+        let cashFlowChart, dtiGaugeChart, loanRadarChart;
+        let animationFrame = null;
+        let currentValues = { emi: 0, outstanding: 0, disposable: 0, savingsTotal: 0 };
+
+        // helper
+        function getValue(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+        function calculateEMI(p, r, n) { let R = r / 12 / 100; if (R === 0) return p / n; return (p * R * Math.pow(1 + R, n)) / (Math.pow(1 + R, n) - 1); }
+        function calculateOutstanding(p, r, n, paid) { let emi = calculateEMI(p, r, n); let bal = p; let R = r / 12 / 100; for (let i = 0; i < paid; i++) { let interest = bal * R; let principalPaid = emi - interest; bal -= principalPaid; if (bal <= 0) break; } return Math.max(0, bal); }
+
+        function refreshAll() { calculateTotals(); updateCharts(); generateStrategies(); calculateComparison(); }
+        function animateNumber(element, newVal, oldVal) { if (!element) return; let start = oldVal; let end = newVal; let duration = 400; let startTime = null; function step(timestamp) { if (!startTime) startTime = timestamp; let progress = Math.min(1, (timestamp - startTime) / duration); let val = Math.floor(start + (end - start) * progress); element.innerText = '₹' + val.toLocaleString(); if (progress < 1) requestAnimationFrame(step); else element.innerText = '₹' + end.toLocaleString(); } requestAnimationFrame(step); }
+
+        function calculateTotals() {
+            let totalIncome = getValue('salary') + getValue('rental') + getValue('bankSavings') + getValue('spouse') + getValue('parental') + getValue('miscIncome');
+            let totalExpenses = getValue('groceries') + getValue('communication') + getValue('eb') + getValue('rent') + getValue('maintenance') + getValue('fuel') + getValue('medical') + getValue('miscExpense');
+            let totalEMI = loans.reduce((s, l) => s + (parseFloat(l.emi) || 0), 0);
+            let totalOutstanding = loans.reduce((s, l) => s + (parseFloat(l.outstanding) || 0), 0);
+            let monthlySavingsContribution = savings.reduce((s, sav) => s + (parseFloat(sav.monthlyContribution) || 0), 0);
+            let totalSavingsAmount = savings.reduce((s, sav) => s + (parseFloat(sav.amount) || 0), 0);
+            let disposable = totalIncome - totalExpenses - totalEMI - monthlySavingsContribution;
+            let dti = totalIncome > 0 ? (totalEMI / totalIncome) * 100 : 0;
+
+            document.getElementById('totalIncomeDisplay').innerText = '₹' + totalIncome.toLocaleString();
+            document.getElementById('totalExpensesDisplay').innerText = '₹' + totalExpenses.toLocaleString();
+            animateNumber(document.getElementById('statEMI'), totalEMI, currentValues.emi);
+            animateNumber(document.getElementById('statOutstanding'), totalOutstanding, currentValues.outstanding);
+            animateNumber(document.getElementById('statDisposable'), disposable, currentValues.disposable);
+            animateNumber(document.getElementById('statSavings'), totalSavingsAmount, currentValues.savingsTotal);
+            currentValues = { emi: totalEMI, outstanding: totalOutstanding, disposable: disposable, savingsTotal: totalSavingsAmount };
+
+            // DTI Gauge update
+            if (dtiGaugeChart) dtiGaugeChart.data.datasets[0].data = [dti, 100 - dti];
+            dtiGaugeChart?.update();
+            document.getElementById('dtiText').innerHTML = `DTI: ${dti.toFixed(1)}% ${dti < 30 ? '✅ Healthy' : dti < 50 ? '⚠️ Moderate' : '🔴 Critical'}`;
+            if (totalOutstanding === 0 && loans.length > 0 && currentValues.outstanding > 0) canvasConfetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+            // update radar
+            updateLoanRadar();
+        }
+
+        function updateLoanRadar() {
+            if (!loanRadarChart || loans.length === 0) return;
+            let labels = loans.map(l => l.type.slice(0, 10));
+            let interestNorm = loans.map(l => Math.min(100, (parseFloat(l.rate) / 40) * 100));
+            let tenureNorm = loans.map(l => Math.min(100, (l.remainingEmis / 60) * 100));
+            loanRadarChart.data.datasets[0].data = interestNorm;
+            loanRadarChart.data.datasets[1].data = tenureNorm;
+            loanRadarChart.data.labels = labels;
+            loanRadarChart.update();
+        }
+
+        function updateCharts() {
+            let income = getValue('salary') + getValue('rental') + getValue('bankSavings') + getValue('spouse') + getValue('parental') + getValue('miscIncome');
+            let expenses = getValue('groceries') + getValue('communication') + getValue('eb') + getValue('rent') + getValue('maintenance') + getValue('fuel') + getValue('medical') + getValue('miscExpense');
+            let emiTotal = loans.reduce((s, l) => s + parseFloat(l.emi), 0);
+            let savingsCont = savings.reduce((s, sv) => s + parseFloat(sv.monthlyContribution || 0), 0);
+            let remaining = income - expenses - emiTotal - savingsCont;
+            if (cashFlowChart) cashFlowChart.destroy();
+            let ctx = document.getElementById('cashFlowChart').getContext('2d');
+            cashFlowChart = new Chart(ctx, { type: 'bar', data: { labels: ['Income', 'Expenses', 'EMIs', 'Savings', 'Disposable'], datasets: [{ label: '₹', data: [income, -expenses, -emiTotal, -savingsCont, remaining], backgroundColor: ['#10b981', '#ef4444', '#3b82f6', '#8b5cf6', '#f59e0b'], borderRadius: 12 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } } }, scales: { y: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }, x: { ticks: { color: '#fff' } } } } });
+        }
+
+        // ----- LOANS CRUD -----
+        function renderLoans() { let container = document.getElementById('loansList'); if (loans.length === 0) { container.innerHTML = '<div class="empty-state">💼 No loans yet</div>'; return; } let sorted = [...loans].sort((a, b) => a.remainingEmis - b.remainingEmis); container.innerHTML = sorted.map((l, i) => `<div class="loan-item"><div class="loan-header"><div><span class="priority-badge">#${i + 1}</span><strong> ${l.type}</strong><div style="font-size:13px;">${l.lender}</div></div><div><button class="btn" style="background:#2563eb;" onclick="showEMICalendar(${l.id})">📅</button><button class="btn" style="background:#dc2626; margin-left:8px;" onclick="deleteLoan(${l.id})">🗑️</button></div></div><div class="loan-details" style="display:flex; gap:16px; flex-wrap:wrap; margin:12px 0;"><span>EMI: ₹${parseFloat(l.emi).toLocaleString()}</span><span>Outstanding: ₹${parseFloat(l.outstanding).toLocaleString()}</span><span>Remaining: ${l.remainingEmis} months</span></div><div class="progress-bar"><div class="progress-fill" style="width:${((l.paidEmis / l.tenure) * 100)}%"></div></div></div>`).join(''); }
+        function deleteLoan(id) { loans = loans.filter(l => l.id !== id); renderLoans(); refreshAll(); toastMsg('Loan removed'); }
+        function addLoan() { let type = document.getElementById('loanType').value, lender = document.getElementById('loanLender').value, principal = parseFloat(document.getElementById('loanPrincipal').value), rate = parseFloat(document.getElementById('loanRate').value), tenure = parseInt(document.getElementById('loanTenure').value), paid = parseInt(document.getElementById('loanPaid').value) || 0; if (!lender || !principal || !rate || !tenure) { alert('Fill all fields'); return; } let emi = calculateEMI(principal, rate, tenure); let outstanding = calculateOutstanding(principal, rate, tenure, paid); loans.push({ id: Date.now(), type, lender, principal, rate, tenure, paidEmis: paid, emi: emi.toFixed(2), outstanding: outstanding.toFixed(2), remainingEmis: tenure - paid }); renderLoans(); refreshAll(); closeLoanModal(); toastMsg(`✅ ${type} added`); document.getElementById('loanLender').value = ''; document.getElementById('loanPrincipal').value = ''; document.getElementById('loanRate').value = ''; document.getElementById('loanTenure').value = ''; document.getElementById('loanPaid').value = '0'; }
+        function renderSavings() { let container = document.getElementById('savingsList'); if (savings.length === 0) { container.innerHTML = '<div class="empty-state">🎯 No savings yet</div>'; return; } container.innerHTML = savings.map(s => `<div class="saving-item"><div><strong>${s.type}</strong> - ${s.institution}<br>💰 ₹${parseFloat(s.amount).toLocaleString()} | +₹${parseFloat(s.monthlyContribution || 0)}/mo<br><span style="font-size:12px;">🎯 ${s.goal}</span></div><button class="btn" style="background:#dc2626; margin-top:8px;" onclick="deleteSaving(${s.id})">Delete</button></div>`).join(''); }
+        function deleteSaving(id) { savings = savings.filter(s => s.id !== id); renderSavings(); refreshAll(); toastMsg('Savings deleted'); }
+        function addSaving() { let type = document.getElementById('savingsType').value, inst = document.getElementById('savingsInstitution').value, amt = parseFloat(document.getElementById('savingsAmount').value), contrib = parseFloat(document.getElementById('savingsContribution').value) || 0, goal = document.getElementById('savingsGoal').value || 'General'; if (!inst || !amt) { alert('Institution & amount required'); return; } savings.push({ id: Date.now(), type, institution: inst, amount: amt, monthlyContribution: contrib, goal }); renderSavings(); refreshAll(); closeSavingsModal(); toastMsg('Savings added'); }
+        function showEMICalendar(id) { let loan = loans.find(l => l.id === id); if (!loan) return; let emi = parseFloat(loan.emi), bal = parseFloat(loan.outstanding), R = loan.rate / 12 / 100; let html = '<table style="width:100%;"><tr><th>Month</th><th>EMI</th><th>Interest</th><th>Principal</th><th>Balance</th></tr>'; for (let m = 1; m <= loan.remainingEmis && bal > 0; m++) { let interest = bal * R; let principalPaid = Math.min(emi - interest, bal); bal -= principalPaid; html += `<tr><td>${m}</td><td>₹${emi.toFixed(0)}</td><td>₹${interest.toFixed(0)}</td><td>₹${principalPaid.toFixed(0)}</td><td>₹${Math.max(0, bal).toFixed(0)}</td></tr>`; } html += '</table>'; document.getElementById('calendarContent').innerHTML = html; document.getElementById('calendarModal').classList.add('active'); }
+        function calculateComparison() { let extra = getValue('extraPayment'); if (extra <= 0 || loans.length === 0) { document.getElementById('comparisonResult').style.display = 'none'; return; } let totalOut = loans.reduce((s, l) => s + parseFloat(l.outstanding), 0); let totalEmi = loans.reduce((s, l) => s + parseFloat(l.emi), 0); let monthsNow = Math.ceil(totalOut / totalEmi); let monthsAcc = Math.ceil(totalOut / (totalEmi + extra)); document.getElementById('comparisonResult').style.display = 'block'; document.getElementById('comparisonResult').innerHTML = `<h4>💡 Impact: ${monthsNow} months → ${monthsAcc} months (save ${monthsNow - monthsAcc} months)</h4><div>Extra ₹${extra.toLocaleString()}/month → interest saved ~₹${((totalOut * 0.15) * (monthsNow - monthsAcc) / 12).toFixed(0)}</div>`; }
+        function generateStrategies() { if (loans.length === 0) { document.getElementById('strategiesSection').style.display = 'none'; return; } let strategies = [`⚡ Snowball: close smallest loan first → mental wins`, `🏔️ Avalanche: target highest interest → saves more money`, `💰 Use 50% of disposable income for extra payments`]; let type = document.getElementById('strategyType').value; let amt = parseFloat(document.getElementById('strategyAmount').value); if (type === 'borrowing' && amt > 0) strategies.push(`⚠️ Borrowing ₹${amt.toLocaleString()} will increase DTI. Consider delaying if above 40%.`); if (type === 'settlement' && amt > 0) strategies.push(`🎉 Windfall: 40% prepay high-interest loan, 30% emergency fund, 20% invest, 10% enjoy.`); document.getElementById('strategiesSection').style.display = 'block'; document.getElementById('strategiesList').innerHTML = strategies.map(s => `<div class="strategy-card">💡 ${s}</div>`).join(''); }
+        function toastMsg(msg) { let t = document.createElement('div'); t.className = 'toast-message'; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
+        function exportCSV() { let csv = "Loan Data\n"; loans.forEach(l => csv += `${l.type},${l.lender},${l.principal},${l.rate},${l.emi}\n`); let blob = new Blob([csv], { type: "text/csv" }); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "debt_report.csv"; a.click(); }
+        function exportPDF() { let txt = "NEXUS DEBT REPORT\n" + new Date().toLocaleString() + "\nTotal Outstanding: ₹" + currentValues.outstanding.toLocaleString(); let blob = new Blob([txt], { type: "text/plain" }); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "report.txt"; a.click(); }
+        function openLoanModal() { document.getElementById('loanModal').classList.add('active'); } function closeLoanModal() { document.getElementById('loanModal').classList.remove('active'); }
+        function openSavingsModal() { document.getElementById('savingsModal').classList.add('active'); } function closeSavingsModal() { document.getElementById('savingsModal').classList.remove('active'); }
+        function closeCalendarModal() { document.getElementById('calendarModal').classList.remove('active'); }
+
+        // init charts & observers
+        window.onload = () => {
+            const ctxGauge = document.getElementById('dtiGaugeCanvas').getContext('2d');
+            dtiGaugeChart = new Chart(ctxGauge, { type: 'doughnut', data: { datasets: [{ data: [0, 100], backgroundColor: ['#f97316', 'rgba(255,255,255,0.2)'], borderWidth: 0, cutout: '70%' }] }, options: { responsive: true, plugins: { tooltip: { callbacks: { label: (ctx) => `DTI: ${ctx.raw}%` } } } } });
+            const radarCtx = document.getElementById('loanRadarCanvas').getContext('2d');
+            loanRadarChart = new Chart(radarCtx, { type: 'radar', data: { labels: [], datasets: [{ label: 'Interest intensity', data: [], borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.2)' }, { label: 'Tenure remaining', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.2)' }] }, options: { responsive: true, scales: { r: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.2)' } } }, plugins: { legend: { labels: { color: '#fff' } } } } });
+            const observer = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }); }, { threshold: 0.1 });
+            document.querySelectorAll('.section.reveal').forEach(el => observer.observe(el));
+            refreshAll(); renderLoans(); renderSavings();
+        };
+    </script>
+</body>
+
+</html>

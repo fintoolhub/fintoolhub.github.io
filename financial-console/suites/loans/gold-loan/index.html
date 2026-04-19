@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jewel Loan Calculator | Financial Calculators</title>
+    <style>
+        :root {
+            --bg: #0f0f23;
+            --panel: #1a1a2e;
+            --border: #2d2d4d;
+            --text: #e0e0ff;
+            --muted: #8a8ac4;
+            --accent: #d4af37;
+            --accent-secondary: #b8860b;
+            --accent-soft: rgba(212, 175, 55, 0.15);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius: 10px;
+            --transition-fast: 0.2s ease;
+            --transition: 0.3s ease;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="light"] {
+            --bg: #f8f9fa;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --accent: #d4af37;
+            --accent-secondary: #b8860b;
+            --accent-soft: rgba(212, 175, 55, 0.12);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            transition: background-color var(--transition), color var(--transition);
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all var(--transition);
+            z-index: 100;
+        }
+
+        .brand { margin-bottom: 2rem; }
+        .brand-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+        }
+        .brand-subtitle { font-size: 0.9rem; color: var(--muted); margin-top: 0.5rem; }
+
+        .meta-lines {
+            background: var(--accent-soft);
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            border: 1px solid var(--border);
+        }
+        .meta-lines span { display: block; color: var(--text); }
+        .meta-lines .highlight { color: var(--accent); font-weight: 600; }
+
+        .nav-items { flex: 1; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+        }
+        .nav-item:hover { background: var(--accent-soft); border-color: var(--border); transform: translateX(4px); }
+        .nav-item.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+        .nav-item i { margin-right: 0.75rem; width: 20px; text-align: center; }
+
+        .sidebar-footer { margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+        .workspace-pill {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            border: 1px solid var(--accent-soft);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            max-width: calc(100% - 260px);
+            transition: margin-left var(--transition), max-width var(--transition);
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .page-info h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+        }
+        .page-info p { color: var(--muted); font-size: 0.95rem; }
+
+        .topbar-controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+        .back-btn {
+            padding: 0.75rem 1.25rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all var(--transition-fast);
+            font-size: 0.95rem;
+        }
+        .back-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+        .theme-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            font-size: 1.1rem;
+        }
+        .theme-toggle:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+        .panel-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, var(--accent-soft), transparent);
+        }
+        .panel-body { padding: 1.5rem; }
+
+        .input-group { margin-bottom: 1.25rem; }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .input-with-unit { position: relative; }
+        .input-with-unit input,
+        .input-with-unit select {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            padding-right: 3rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 1rem;
+            transition: all var(--transition-fast);
+        }
+        .input-with-unit input:focus,
+        .input-with-unit select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+        .unit {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        .mode-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            background: var(--bg);
+            padding: 0.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .mode-option {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: all var(--transition-fast);
+            border: 2px solid transparent;
+            font-weight: 600;
+        }
+        .mode-option:hover { background: var(--accent-soft); }
+        .mode-option.active {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .mode-option i { display: block; font-size: 1.5rem; margin-bottom: 0.5rem; }
+
+        .metal-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .metal-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.85rem;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: 600;
+        }
+        .metal-option:hover { border-color: var(--accent); }
+        .metal-option.active {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+        .metal-option i { font-size: 1.2rem; }
+
+        .slider-container { margin-top: 0.5rem; }
+        .slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--border);
+            border-radius: 3px;
+            outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            cursor: pointer;
+            border: 2px solid var(--panel);
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            cursor: pointer;
+            border: 2px solid var(--panel);
+        }
+        .value-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 0.25rem;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 0.85rem 1.5rem;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+        .btn-secondary {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .btn-secondary:hover { background: var(--accent-soft); border-color: var(--accent); }
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .statement-card {
+            background: var(--panel);
+            border: 2px solid var(--accent);
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+        }
+        .statement-header {
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            color: white;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .statement-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .statement-title {
+            text-align: right;
+            font-size: 0.95rem;
+            opacity: 0.95;
+        }
+        .statement-body { padding: 1.5rem; }
+        .statement-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 0.95rem;
+        }
+        .statement-row:last-child { border-bottom: none; }
+        .statement-row.total {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--accent);
+            padding-top: 1rem;
+            border-top: 2px solid var(--border);
+            margin-top: 0.5rem;
+        }
+        .statement-row .label { color: var(--muted); }
+        .statement-row .value { font-weight: 600; }
+        .statement-footer {
+            background: var(--bg);
+            padding: 1rem 1.5rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+        }
+        .statement-badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            margin-top: 0.5rem;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 1024px) {
+            .input-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; padding: 1rem; }
+            .brand-title, .brand-subtitle, .meta-lines, .nav-item span { display: none; }
+            .nav-item { justify-content: center; padding: 0.75rem; }
+            .nav-item i { margin: 0; }
+            .main-content { margin-left: 60px; max-width: calc(100% - 60px); padding: 1rem; }
+            .topbar { flex-direction: column; align-items: flex-start; }
+            .buttons, .actions-bar { flex-direction: column; }
+            .btn { width: 100%; }
+        }
+
+        @media print {
+            .sidebar, .topbar-controls, .panel-header, .buttons, .actions-bar, .mode-selector, .slider-container, .value-display {
+                display: none !important;
+            }
+            .main-content {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 1rem;
+            }
+            .statement-card {
+                border: 2px solid #333;
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+            body {
+                background: white;
+                color: black;
+            }
+            :root {
+                --bg: white;
+                --panel: white;
+                --text: black;
+                --muted: #555;
+                --accent: #b8860b;
+                --border: #ccc;
+            }
+            .statement-header {
+                background: #b8860b !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body data-theme="dark">
+    <div class="sidebar">
+        <div class="brand">
+            <div class="brand-title">Finance Console</div>
+            <div class="brand-subtitle">Financial Tools & Personal Wealth Calculators</div>
+        </div>
+        
+        <div class="meta-lines">
+            <span class="highlight">Wealth Planning · Tax Optimization · ROI · Investments</span>
+            <span>SIP · SWP · FD · RD · Loans · Forex · Gold · Solar</span>
+        </div>
+        
+        <div class="nav-items">
+            <a href="../../../index.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+            <a href="../index.html" class="nav-item active"><i class="fas fa-calculator"></i><span>Financial Calculators</span></a>
+            <a href="../../investments/index.html" class="nav-item"><i class="fas fa-chart-line"></i><span>Investments</span></a>
+            <a href="../../loans/index.html" class="nav-item"><i class="fas fa-hand-holding-usd"></i><span>Loans</span></a>
+            <a href="../../taxes/index.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Taxes</span></a>
+            <a href="../../currency-tools/index.html" class="nav-item"><i class="fas fa-globe"></i><span>Currency Tools</span></a>
+            <a href="../../gold-metals/index.html" class="nav-item"><i class="fas fa-gem"></i><span>Gold & Metals</span></a>
+            <a href="../../solar-power/index.html" class="nav-item"><i class="fas fa-solar-panel"></i><span>Solar Power</span></a>
+            <a href="../../../../index.html" class="nav-item"><i class="fas fa-arrow-left"></i><span>Back to Portfolio</span></a>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="workspace-pill">Jewel Loan Calculator</div>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="topbar">
+            <div class="page-info">
+                <h1>Jewel Loan Calculator</h1>
+                <p>Calculate gold loan EMI, interest & repayment - Two calculation modes</p>
+            </div>
+            <div class="topbar-controls">
+                <a href="../index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Calculators</a>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"><i class="fas fa-moon"></i></button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-header"><span><i class="fas fa-coins"></i> Calculation Mode</span></div>
+            <div class="panel-body">
+                <!-- Mode Selector -->
+                <div class="mode-selector">
+                    <div class="mode-option active" data-mode="loan-to-gold">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <div>Loan Amount → Gold Required</div>
+                        <small style="display:block; margin-top:0.25rem; opacity:0.8; font-size:0.85rem">I need ₹X loan, how much gold?</small>
+                    </div>
+                    <div class="mode-option" data-mode="gold-to-loan">
+                        <i class="fas fa-ring"></i>
+                        <div>Gold Available → Loan Value</div>
+                        <small style="display:block; margin-top:0.25rem; opacity:0.8; font-size:0.85rem">I have X grams gold, how much loan?</small>
+                    </div>
+                </div>
+
+                <!-- Metal Type -->
+                <div class="input-group">
+                    <label>Select Metal</label>
+                    <div class="metal-selector">
+                        <div class="metal-option active" data-metal="gold">
+                            <i class="fas fa-ring"></i> Gold
+                        </div>
+                        <div class="metal-option" data-metal="silver">
+                            <i class="fas fa-cube"></i> Silver
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode 1: Loan Amount Input -->
+                <div id="mode1Inputs">
+                    <div class="input-group">
+                        <label>Required Loan Amount (₹)</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="requiredLoan" value="100000" min="1" step="1000">
+                            <span class="unit">₹</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode 2: Gold Weight Input -->
+                <div id="mode2Inputs" class="hidden">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Gold Weight in Grams</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="grams" value="20" min="0" step="0.1">
+                                <span class="unit">g</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Gold Weight in Sovereigns</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="sovereigns" value="0" min="0" step="0.1">
+                                <span class="unit">sov</span>
+                            </div>
+                            <div style="font-size:0.8rem; color:var(--muted); margin-top:0.25rem;">1 Sovereign = 8 Grams</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Common Inputs -->
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Purity</label>
+                        <div class="input-with-unit">
+                            <select id="purity">
+                                <option value="1">24K (99.9%)</option>
+                                <option value="0.916" selected>22K (91.6%)</option>
+                                <option value="0.75">18K (75%)</option>
+                                <option value="0.585">14K (58.5%)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Rate per Gram (₹)</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="ratePerGram" value="6876" min="1" step="1">
+                            <span class="unit">₹</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Loan-to-Value (LTV) Ratio</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="ltv" value="70" min="10" max="85" step="1">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="ltvSlider" min="10" max="85" value="70" class="slider">
+                        <div class="value-display"><span>10%</span><span>85%</span></div>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Annual Interest Rate</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="annualRate" value="12" min="0.1" max="30" step="0.1">
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" id="rateSlider" min="0.1" max="30" value="12" step="0.1" class="slider">
+                            <div class="value-display"><span>0.1%</span><span>30%</span></div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Loan Tenure</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="tenure" value="12" min="1" max="60" step="1">
+                            <span class="unit">Months</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn btn-primary" id="calculateBtn"><i class="fas fa-calculator"></i> Calculate</button>
+                    <button class="btn btn-secondary" id="resetBtn"><i class="fas fa-redo"></i> Reset</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="resultsSection" class="hidden">
+            <div class="actions-bar">
+                <button class="btn btn-success" id="copySummaryBtn"><i class="fas fa-copy"></i> Copy WhatsApp Summary</button>
+                <button class="btn btn-secondary" id="downloadPdfBtn"><i class="fas fa-file-pdf"></i> Download PDF</button>
+            </div>
+            <div id="statementOutput"></div>
+        </div>
+        
+        <div class="panel" style="margin-top: 2rem;">
+            <div class="panel-header"><span><i class="fas fa-info-circle"></i> How Jewel Loans Work</span></div>
+            <div class="panel-body">
+                <p style="margin-bottom: 1rem;">
+                    Jewel loans are secured loans where gold or silver ornaments are pledged as collateral. 
+                    Banks typically offer up to 75-80% of the market value (LTV) at competitive interest rates.
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div style="padding: 1rem; background: var(--accent-soft); border-radius: var(--radius); border: 1px solid var(--border);">
+                        <div style="font-weight: 600; color: var(--accent); margin-bottom: 0.5rem;"><i class="fas fa-calculator"></i> Mode 1: Loan → Gold</div>
+                        <div style="font-size: 0.9rem; color: var(--muted); line-height: 1.5;">
+                            Enter your required loan amount to find out how much gold you need to pledge based on current market rates and LTV.
+                        </div>
+                    </div>
+                    <div style="padding: 1rem; background: var(--accent-soft); border-radius: var(--radius); border: 1px solid var(--border);">
+                        <div style="font-weight: 600; color: var(--accent); margin-bottom: 0.5rem;"><i class="fas fa-calculator"></i> Mode 2: Gold → Loan</div>
+                        <div style="font-size: 0.9rem; color: var(--muted); line-height: 1.5;">
+                            Enter your available gold weight to calculate the maximum loan amount you can get against it.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const GRAMS_PER_SOVEREIGN = 8;
+        const DEFAULT_GOLD_RATE = 6876;
+        const DEFAULT_SILVER_RATE = 92;
+        
+        let currentMode = 'loan-to-gold';
+        let metalType = 'gold';
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+        
+        const els = {
+            themeToggle: document.getElementById('themeToggle'),
+            themeIcon: document.querySelector('#themeToggle i'),
+            modeOptions: document.querySelectorAll('.mode-option'),
+            metalOptions: document.querySelectorAll('.metal-option'),
+            mode1Inputs: document.getElementById('mode1Inputs'),
+            mode2Inputs: document.getElementById('mode2Inputs'),
+            requiredLoan: document.getElementById('requiredLoan'),
+            grams: document.getElementById('grams'),
+            sovereigns: document.getElementById('sovereigns'),
+            purity: document.getElementById('purity'),
+            ratePerGram: document.getElementById('ratePerGram'),
+            ltv: document.getElementById('ltv'),
+            ltvSlider: document.getElementById('ltvSlider'),
+            annualRate: document.getElementById('annualRate'),
+            rateSlider: document.getElementById('rateSlider'),
+            tenure: document.getElementById('tenure'),
+            calculateBtn: document.getElementById('calculateBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            resultsSection: document.getElementById('resultsSection'),
+            statementOutput: document.getElementById('statementOutput'),
+            copySummaryBtn: document.getElementById('copySummaryBtn'),
+            downloadPdfBtn: document.getElementById('downloadPdfBtn')
+        };
+
+        function initTheme() {
+            document.body.setAttribute('data-theme', currentTheme);
+            els.themeIcon.className = currentTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            els.themeToggle.addEventListener('click', () => {
+                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.body.setAttribute('data-theme', currentTheme);
+                els.themeIcon.className = currentTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+                localStorage.setItem('theme', currentTheme);
+            });
+        }
+
+        // Mode switching
+        els.modeOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                els.modeOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                currentMode = opt.dataset.mode;
+                
+                if (currentMode === 'loan-to-gold') {
+                    els.mode1Inputs.classList.remove('hidden');
+                    els.mode2Inputs.classList.add('hidden');
+                } else {
+                    els.mode1Inputs.classList.add('hidden');
+                    els.mode2Inputs.classList.remove('hidden');
+                }
+                calculate();
+            });
+        });
+
+        // Metal switching
+        els.metalOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                els.metalOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                metalType = opt.dataset.metal;
+                els.ratePerGram.value = metalType === 'gold' ? DEFAULT_GOLD_RATE : DEFAULT_SILVER_RATE;
+                calculate();
+            });
+        });
+
+        function syncSlider(input, slider) {
+            input.addEventListener('input', () => { slider.value = input.value; calculate(); });
+            slider.addEventListener('input', () => { input.value = slider.value; calculate(); });
+        }
+        syncSlider(els.ltv, els.ltvSlider);
+        syncSlider(els.annualRate, els.rateSlider);
+
+        ['requiredLoan', 'grams', 'sovereigns', 'purity', 'ratePerGram', 'tenure'].forEach(id => {
+            els[id].addEventListener('input', calculate);
+        });
+
+        function calculate() {
+            const purity = parseFloat(els.purity.value) || 1;
+            const ratePerGram = parseFloat(els.ratePerGram.value) || 0;
+            const ltvPercent = parseFloat(els.ltv.value) || 70;
+            const annualRate = parseFloat(els.annualRate.value) || 0;
+            const tenureMonths = parseInt(els.tenure.value) || 12;
+            
+            let totalGrams, overallValue, loanAmount;
+            
+            if (currentMode === 'loan-to-gold') {
+                // Mode 1: Given loan amount, calculate required gold
+                loanAmount = parseFloat(els.requiredLoan.value) || 0;
+                if (loanAmount <= 0) return;
+                
+                // Loan = Overall Value × LTV%
+                // Overall Value = Loan / LTV%
+                overallValue = loanAmount / (ltvPercent / 100);
+                
+                // Overall Value = Total Grams × Rate × Purity
+                // Total Grams = Overall Value / (Rate × Purity)
+                totalGrams = overallValue / (ratePerGram * purity);
+                
+            } else {
+                // Mode 2: Given gold weight, calculate loan amount
+                const grams = parseFloat(els.grams.value) || 0;
+                const sovereigns = parseFloat(els.sovereigns.value) || 0;
+                totalGrams = (sovereigns * GRAMS_PER_SOVEREIGN) + grams;
+                
+                if (totalGrams <= 0) return;
+                
+                overallValue = totalGrams * ratePerGram * purity;
+                loanAmount = overallValue * (ltvPercent / 100);
+            }
+            
+            // Calculate EMI and interest
+            let emi = 0, totalPayable = 0, totalInterest = 0, firstMonthInterest = 0;
+            
+            if (annualRate > 0 && tenureMonths > 0) {
+                const monthlyRate = annualRate / 12 / 100;
+                const powTerm = Math.pow(1 + monthlyRate, tenureMonths);
+                emi = (loanAmount * monthlyRate * powTerm) / (powTerm - 1);
+                totalPayable = emi * tenureMonths;
+                totalInterest = totalPayable - loanAmount;
+                firstMonthInterest = loanAmount * monthlyRate;
+            } else {
+                totalPayable = loanAmount;
+                totalInterest = 0;
+            }
+            
+            const sovereignsCalculated = Math.floor(totalGrams / GRAMS_PER_SOVEREIGN);
+            const remainingGrams = totalGrams % GRAMS_PER_SOVEREIGN;
+            
+            updateResults({
+                mode: currentMode,
+                metalType,
+                totalGrams,
+                sovereignsCalculated,
+                remainingGrams,
+                overallValue,
+                ltvPercent,
+                loanAmount,
+                annualRate,
+                tenureMonths,
+                emi,
+                totalPayable,
+                totalInterest,
+                firstMonthInterest,
+                purity
+            });
+        }
+
+        function formatCurrency(amount) {
+            return '₹' + amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+        
+        function formatCurrencyDec(amount) {
+            return '₹' + amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function updateResults(data) {
+            const { mode, metalType, totalGrams, sovereignsCalculated, remainingGrams, overallValue, ltvPercent, loanAmount, annualRate, tenureMonths, emi, totalPayable, totalInterest, firstMonthInterest, purity } = data;
+            
+            const metalIcon = metalType === 'gold' ? 'fa-ring' : 'fa-cube';
+            const metalName = metalType === 'gold' ? 'GOLD' : 'SILVER';
+            const purityText = els.purity.options[els.purity.selectedIndex].text;
+            
+            let weightDisplay = '';
+            if (mode === 'loan-to-gold') {
+                weightDisplay = `
+                    <div class="statement-row">
+                        <span class="label">Required Gold Weight</span>
+                        <span class="value">${totalGrams.toFixed(2)} Grams</span>
+                    </div>
+                    <div class="statement-row">
+                        <span class="label">In Sovereigns</span>
+                        <span class="value">${sovereignsCalculated} Sovereigns + ${remainingGrams.toFixed(2)} Grams</span>
+                    </div>
+                `;
+            } else {
+                weightDisplay = `
+                    <div class="statement-row">
+                        <span class="label">Total Gold Weight</span>
+                        <span class="value">${totalGrams.toFixed(2)} Grams</span>
+                    </div>
+                    <div class="statement-row">
+                        <span class="label">In Sovereigns</span>
+                        <span class="value">${sovereignsCalculated} Sovereigns + ${remainingGrams.toFixed(2)} Grams</span>
+                    </div>
+                `;
+            }
+            
+            els.statementOutput.innerHTML = `
+                <div class="statement-card" id="printableStatement">
+                    <div class="statement-header">
+                        <div class="statement-logo"><i class="fas fa-landmark"></i> Jewel Loan Statement</div>
+                        <div class="statement-title">
+                            <div>Generated: ${new Date().toLocaleDateString('en-IN')}</div>
+                            <div class="statement-badge">${mode === 'loan-to-gold' ? 'LOAN → GOLD' : 'GOLD → LOAN'}</div>
+                        </div>
+                    </div>
+                    <div class="statement-body">
+                        <div class="statement-row">
+                            <span class="label">Metal Type & Purity</span>
+                            <span class="value">${metalName} (${purityText})</span>
+                        </div>
+                        ${weightDisplay}
+                        <div class="statement-row">
+                            <span class="label">Market Rate per Gram</span>
+                            <span class="value">${formatCurrency(ratePerGram)}</span>
+                        </div>
+                        <div class="statement-row total">
+                            <span class="label">Overall Market Value</span>
+                            <span class="value">${formatCurrency(overallValue)}</span>
+                        </div>
+                        
+                        <div class="statement-row" style="margin-top:1rem;">
+                            <span class="label">Loan-to-Value (LTV)</span>
+                            <span class="value">${ltvPercent}%</span>
+                        </div>
+                        <div class="statement-row total">
+                            <span class="label">${mode === 'loan-to-gold' ? 'Loan Sanctioned' : 'Loan Available'}</span>
+                            <span class="value">${formatCurrency(loanAmount)}</span>
+                        </div>
+                        
+                        <div class="statement-row" style="margin-top:1rem;">
+                            <span class="label">Annual Interest Rate</span>
+                            <span class="value">${annualRate}% p.a.</span>
+                        </div>
+                        <div class="statement-row">
+                            <span class="label">Loan Tenure</span>
+                            <span class="value">${tenureMonths} Months</span>
+                        </div>
+                        <div class="statement-row">
+                            <span class="label">First Month Interest</span>
+                            <span class="value">${formatCurrencyDec(firstMonthInterest)}</span>
+                        </div>
+                        <div class="statement-row">
+                            <span class="label">Monthly EMI</span>
+                            <span class="value" style="color:var(--accent); font-size:1.1rem;">${formatCurrencyDec(emi)}</span>
+                        </div>
+                        <div class="statement-row total">
+                            <span class="label">Total Interest Payable</span>
+                            <span class="value">${formatCurrency(totalInterest)}</span>
+                        </div>
+                        <div class="statement-row total">
+                            <span class="label">Total Amount Repayable</span>
+                            <span class="value">${formatCurrency(totalPayable)}</span>
+                        </div>
+                    </div>
+                    <div class="statement-footer">
+                        <i class="fas fa-info-circle"></i> This is an estimate only. Actual loan terms may vary based on bank policies, purity assessment, and credit profile.
+                    </div>
+                </div>
+            `;
+            
+            els.resultsSection.classList.remove('hidden');
+            els.resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateWhatsAppText(data) {
+            const modeText = data.mode === 'loan-to-gold' ? 'Loan → Gold' : 'Gold → Loan';
+            const weightText = data.mode === 'loan-to-gold' 
+                ? `Required Gold: ${data.totalGrams.toFixed(2)}g (${data.sovereignsCalculated} sov + ${data.remainingGrams.toFixed(2)}g)`
+                : `Gold Weight: ${data.totalGrams.toFixed(2)}g (${data.sovereignsCalculated} sov + ${data.remainingGrams.toFixed(2)}g)`;
+            
+            return `🏦 Jewel Loan Estimate (${modeText})
+
+💍 Metal: ${data.metalType.toUpperCase()} (${els.purity.options[els.purity.selectedIndex].text})
+⚖️ ${weightText}
+💰 Market Value: ${formatCurrency(data.overallValue)}
+
+📊 Loan Details:
+• LTV: ${data.ltvPercent}%
+• Loan Amount: ${formatCurrency(data.loanAmount)}
+• Interest Rate: ${data.annualRate}% p.a.
+• Tenure: ${data.tenureMonths} months
+
+💳 Repayment:
+• EMI: ${formatCurrencyDec(data.emi)}
+• Total Interest: ${formatCurrency(data.totalInterest)}
+• Total Payable: ${formatCurrency(data.totalPayable)}
+
+📌 Generated via Finance Console Jewel Loan Calculator`;
+        }
+
+        els.copySummaryBtn.addEventListener('click', () => {
+            const data = getCurrentData();
+            const text = generateWhatsAppText(data);
+            navigator.clipboard.writeText(text).then(() => {
+                const original = els.copySummaryBtn.innerHTML;
+                els.copySummaryBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                els.copySummaryBtn.classList.add('btn-success');
+                setTimeout(() => {
+                    els.copySummaryBtn.innerHTML = original;
+                    els.copySummaryBtn.classList.remove('btn-success');
+                }, 2000);
+            });
+        });
+
+        els.downloadPdfBtn.addEventListener('click', () => {
+            window.print();
+        });
+
+        function getCurrentData() {
+            const purity = parseFloat(els.purity.value) || 1;
+            const ratePerGram = parseFloat(els.ratePerGram.value) || 0;
+            const ltvPercent = parseFloat(els.ltv.value) || 70;
+            const annualRate = parseFloat(els.annualRate.value) || 0;
+            const tenureMonths = parseInt(els.tenure.value) || 12;
+            
+            let totalGrams, overallValue, loanAmount;
+            
+            if (currentMode === 'loan-to-gold') {
+                loanAmount = parseFloat(els.requiredLoan.value) || 0;
+                overallValue = loanAmount / (ltvPercent / 100);
+                totalGrams = overallValue / (ratePerGram * purity);
+            } else {
+                const grams = parseFloat(els.grams.value) || 0;
+                const sovereigns = parseFloat(els.sovereigns.value) || 0;
+                totalGrams = (sovereigns * GRAMS_PER_SOVEREIGN) + grams;
+                overallValue = totalGrams * ratePerGram * purity;
+                loanAmount = overallValue * (ltvPercent / 100);
+            }
+            
+            const monthlyRate = annualRate / 12 / 100;
+            const powTerm = Math.pow(1 + monthlyRate, tenureMonths);
+            const emi = (loanAmount * monthlyRate * powTerm) / (powTerm - 1);
+            const totalPayable = emi * tenureMonths;
+            const totalInterest = totalPayable - loanAmount;
+            
+            return {
+                mode: currentMode,
+                metalType,
+                totalGrams,
+                sovereignsCalculated: Math.floor(totalGrams / GRAMS_PER_SOVEREIGN),
+                remainingGrams: totalGrams % GRAMS_PER_SOVEREIGN,
+                overallValue,
+                ltvPercent,
+                loanAmount,
+                annualRate,
+                tenureMonths,
+                emi,
+                totalPayable,
+                totalInterest
+            };
+        }
+
+        els.calculateBtn.addEventListener('click', calculate);
+        
+        els.resetBtn.addEventListener('click', () => {
+            els.requiredLoan.value = 100000;
+            els.grams.value = 20;
+            els.sovereigns.value = 0;
+            els.purity.value = '0.916';
+            els.ratePerGram.value = DEFAULT_GOLD_RATE;
+            els.ltv.value = 70;
+            els.ltvSlider.value = 70;
+            els.annualRate.value = 12;
+            els.rateSlider.value = 12;
+            els.tenure.value = 12;
+            currentMode = 'loan-to-gold';
+            metalType = 'gold';
+            els.modeOptions.forEach(o => o.classList.remove('active'));
+            els.modeOptions[0].classList.add('active');
+            els.metalOptions.forEach(o => o.classList.remove('active'));
+            els.metalOptions[0].classList.add('active');
+            els.mode1Inputs.classList.remove('hidden');
+            els.mode2Inputs.classList.add('hidden');
+            calculate();
+        });
+
+        function init() {
+            initTheme();
+            calculate();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

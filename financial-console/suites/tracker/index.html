@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trackers | Financial Calculators</title>
+    <style>
+        :root {
+            --bg: #0f0f23;
+            --panel: #1a1a2e;
+            --border: #2d2d4d;
+            --text: #e0e0ff;
+            --muted: #8a8ac4;
+            --accent: #10b981;
+            --accent-secondary: #059669;
+            --accent-soft: rgba(16, 185, 129, 0.15);
+            --radius: 10px;
+            --transition-fast: 0.2s ease;
+            --transition: 0.3s ease;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        [data-theme="light"] {
+            --bg: #f8f9fa;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --accent: #10b981;
+            --accent-secondary: #059669;
+            --accent-soft: rgba(16, 185, 129, 0.12);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            transition: background-color var(--transition), color var(--transition);
+            overflow-x: hidden;
+        }
+        .sidebar {
+            width: 260px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all var(--transition);
+            z-index: 100;
+        }
+        .brand { margin-bottom: 2rem; }
+        .brand-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+        }
+        .brand-subtitle { font-size: 0.9rem; color: var(--muted); margin-top: 0.5rem; }
+        .meta-lines {
+            background: var(--accent-soft);
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            border: 1px solid var(--border);
+        }
+        .meta-lines span { display: block; color: var(--text); }
+        .meta-lines .highlight { color: var(--accent); font-weight: 600; }
+        .nav-items { flex: 1; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+        }
+        .nav-item:hover { background: var(--accent-soft); border-color: var(--border); transform: translateX(4px); }
+        .nav-item.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+        .nav-item i { margin-right: 0.75rem; width: 20px; text-align: center; }
+        .sidebar-footer { margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+        .workspace-pill {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            border: 1px solid var(--accent-soft);
+        }
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            max-width: calc(100% - 260px);
+            transition: margin-left var(--transition), max-width var(--transition);
+        }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .page-info h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+        }
+        .page-info p { color: var(--muted); font-size: 0.95rem; }
+        .topbar-controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+        .back-btn {
+            padding: 0.75rem 1.25rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all var(--transition-fast);
+            font-size: 0.95rem;
+        }
+        .back-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+        .theme-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            font-size: 1.1rem;
+        }
+        .theme-toggle:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--accent-soft), transparent);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        .hero-icon {
+            font-size: 3.5rem;
+            color: var(--accent);
+            opacity: 0.8;
+        }
+        .hero-content h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+        .hero-content p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* Category Section */
+        .category-section { margin-bottom: 2rem; }
+        .category-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent);
+        }
+        .category-title i { font-size: 1.1rem; }
+
+        /* Tool Cards Grid */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+        .tool-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text);
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+        .tool-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+        }
+        .tool-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent), var(--accent-secondary));
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+        .tool-card:hover::before { opacity: 1; }
+        .tool-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-soft);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+        .tool-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .tool-card p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        .tool-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.75rem;
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-item {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* Quick Links */
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            text-decoration: none;
+            color: var(--text);
+            transition: all var(--transition-fast);
+        }
+        .quick-link:hover {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+        .quick-link i {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+        .quick-link-text h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+        .quick-link-text p {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; padding: 1rem; }
+            .brand-title, .brand-subtitle, .meta-lines, .nav-item span { display: none; }
+            .nav-item { justify-content: center; padding: 0.75rem; }
+            .nav-item i { margin: 0; }
+            .main-content { margin-left: 60px; max-width: calc(100% - 60px); padding: 1rem; }
+            .topbar { flex-direction: column; align-items: flex-start; }
+            .hero { flex-direction: column; text-align: center; padding: 1.5rem; }
+            .hero-icon { font-size: 2.5rem; }
+            .tools-grid { grid-template-columns: 1fr; }
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+            .stats-bar { grid-template-columns: 1fr; }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body data-theme="dark">
+    <div class="sidebar">
+        <div class="brand">
+            <div class="brand-title">Finance Console</div>
+            <div class="brand-subtitle">Financial Tools & Personal Wealth Calculators</div>
+        </div>
+        <div class="meta-lines">
+            <span class="highlight">Wealth Planning · Tax Optimization · ROI · Investments</span>
+            <span>SIP · SWP · FD · RD · Loans · Forex · Gold · Solar</span>
+        </div>
+        <div class="nav-items">
+            <a href="../../../index.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+            <a href="../index.html" class="nav-item"><i class="fas fa-calculator"></i><span>Financial Calculators</span></a>
+            <a href="index.html" class="nav-item active"><i class="fas fa-wallet"></i><span>Trackers</span></a>
+            <a href="../../investments/index.html" class="nav-item"><i class="fas fa-chart-line"></i><span>Investments</span></a>
+            <a href="../../loans/index.html" class="nav-item"><i class="fas fa-hand-holding-usd"></i><span>Loans</span></a>
+            <a href="../../taxes/index.html" class="nav-item"><i class="fas fa-file-invoice-dollar"></i><span>Taxes</span></a>
+            <a href="../../currency-tools/index.html" class="nav-item"><i class="fas fa-globe"></i><span>Currency Tools</span></a>
+            <a href="../../gold-metals/index.html" class="nav-item"><i class="fas fa-gem"></i><span>Gold & Metals</span></a>
+            <a href="../../solar-power/index.html" class="nav-item"><i class="fas fa-solar-panel"></i><span>Solar Power</span></a>
+            <a href="../../../../index.html" class="nav-item"><i class="fas fa-arrow-left"></i><span>Back to Portfolio</span></a>
+        </div>
+        <div class="sidebar-footer">
+            <div class="workspace-pill">Expense & Money Trackers</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="topbar">
+            <div class="page-info">
+                <h1>Trackers Hub</h1>
+                <p>Track expenses, split bills, monitor subscriptions & take control of your daily finances</p>
+            </div>
+            <div class="topbar-controls">
+                <a href="../../../index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
+                <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
+            </div>
+        </div>
+
+        <!-- Hero -->
+        <div class="hero">
+            <div class="hero-icon"><i class="fas fa-receipt"></i></div>
+            <div class="hero-content">
+                <h2>Your Complete Money Tracking Suite</h2>
+                <p>Stop guessing where your money goes. Track daily expenses, split bills with friends, monitor recurring subscriptions, and build smart budgets — all in one place. Clean, private, and built for real-life spending habits.</p>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value">20+</div>
+                <div class="stat-label">Tracking Tools</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">₹0</div>
+                <div class="stat-label">Data Privacy Cost</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">100%</div>
+                <div class="stat-label">Browser-Based</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">CSV</div>
+                <div class="stat-label">Export Ready</div>
+            </div>
+        </div>
+
+        <!-- Daily & Monthly Tracking -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-calendar-day"></i> Daily & Monthly Tracking</div>
+            <div class="tools-grid">
+                <a href="daily-expense-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-coffee"></i></div>
+                    <h3>Daily Expense Tracker</h3>
+                    <p>Log every rupee spent throughout the day with categories, notes, and quick-add presets.</p>
+                    <span class="tool-badge">Most Popular</span>
+                </a>
+                <a href="monthly-budget-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <h3>Monthly Budget Planner</h3>
+                    <p>Set category-wise budgets, track progress, and get alerts when you near your limits.</p>
+                    <span class="tool-badge">Essential</span>
+                </a>
+                <a href="cash-flow-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <h3>Cash Flow Analyzer</h3>
+                    <p>Visualize money in vs money out. Identify cash leaks and optimize your monthly flow.</p>
+                </a>
+                <a href="weekly-spend-summary.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-chart-bar"></i></div>
+                    <h3>Weekly Spend Summary</h3>
+                    <p>Auto-generate weekly spending reports with category breakdowns and trend analysis.</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Split & Shared Expenses -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-users"></i> Split & Shared Expenses</div>
+            <div class="tools-grid">
+                <a href="split-expense-calculator.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-calculator"></i></div>
+                    <h3>Split Expense Calculator</h3>
+                    <p>Divide bills evenly or by custom shares. Perfect for dinners, trips, and group purchases.</p>
+                    <span class="tool-badge">Top Rated</span>
+                </a>
+                <a href="group-trip-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-plane-departure"></i></div>
+                    <h3>Group Trip Tracker</h3>
+                    <p>Track shared travel expenses, assign who paid what, and calculate final settlements.</p>
+                </a>
+                <a href="roommate-bill-splitter.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-home"></i></div>
+                    <h3>Roommate Bill Splitter</h3>
+                    <p>Manage rent, utilities, groceries, and internet with automated monthly settlements.</p>
+                </a>
+                <a href="shared-subscription-manager.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-tv"></i></div>
+                    <h3>Shared Subscription Tracker</h3>
+                    <p>Track Netflix, Spotify, Amazon Prime splits and never miss a payment or renewal date.</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Subscriptions & Recurring -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-sync-alt"></i> Subscriptions & Recurring</div>
+            <div class="tools-grid">
+                <a href="subscription-manager.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-credit-card"></i></div>
+                    <h3>Subscription Manager</h3>
+                    <p>List all active subscriptions, track billing cycles, and calculate monthly/annual totals.</p>
+                    <span class="tool-badge">Money Saver</span>
+                </a>
+                <a href="recurring-payment-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-redo"></i></div>
+                    <h3>Recurring Payment Log</h3>
+                    <p>Track EMIs, insurance premiums, SIPs, and other fixed monthly outflows in one dashboard.</p>
+                </a>
+                <a href="free-trial-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-clock"></i></div>
+                    <h3>Free Trial Tracker</h3>
+                    <p>Set reminders for free trial expirations to avoid unwanted auto-renewals and charges.</p>
+                </a>
+                <a href="subscription-savings.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-piggy-bank"></i></div>
+                    <h3>Subscription Savings Finder</h3>
+                    <p>Identify unused or duplicate subscriptions and calculate potential monthly savings.</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Business & Freelance -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-briefcase"></i> Business & Freelance</div>
+            <div class="tools-grid">
+                <a href="freelance-income-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-laptop-code"></i></div>
+                    <h3>Freelance Income Tracker</h3>
+                    <p>Log projects, payments received, pending invoices, and track your hourly/monthly earnings.</p>
+                </a>
+                <a href="business-expense-log.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <h3>Business Expense Logger</h3>
+                    <p>Categorize business spending, attach receipts, and prepare tax-ready expense reports.</p>
+                </a>
+                <a href="tax-deduction-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-percent"></i></div>
+                    <h3>Tax Deduction Tracker</h3>
+                    <p>Monitor 80C, 80D, HRA, and other deductions to maximize your tax savings efficiently.</p>
+                    <span class="tool-badge">India Specific</span>
+                </a>
+                <a href="invoice-payment-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-file-alt"></i></div>
+                    <h3>Invoice & Payment Tracker</h3>
+                    <p>Track issued invoices, due dates, payment status, and follow up on overdue amounts.</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Lifestyle & Niche -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-heart"></i> Lifestyle & Niche Trackers</div>
+            <div class="tools-grid">
+                <a href="fuel-travel-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-gas-pump"></i></div>
+                    <h3>Fuel & Travel Tracker</h3>
+                    <p>Log fuel fills, mileage, maintenance costs, and calculate cost per kilometer traveled.</p>
+                </a>
+                <a href="grocery-budget-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-shopping-basket"></i></div>
+                    <h3>Grocery Budget Tracker</h3>
+                    <p>Plan weekly grocery lists, track supermarket vs local store prices, and stay within budget.</p>
+                </a>
+                <a href="savings-goal-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-bullseye"></i></div>
+                    <h3>Savings Goal Tracker</h3>
+                    <p>Set targets for vacations, gadgets, or emergencies. Track progress and stay motivated.</p>
+                </a>
+                <a href="debt-payoff-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                    <h3>Debt Payoff Tracker</h3>
+                    <p>List all debts, choose avalanche or snowball method, and visualize your debt-free date.</p>
+                    <span class="tool-badge">Debt Freedom</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-link"></i> Quick Access</div>
+            <div class="quick-links">
+                <a href="daily-expense-tracker.html" class="quick-link">
+                    <i class="fas fa-coffee"></i>
+                    <div class="quick-link-text">
+                        <h4>Daily Expense Tracker</h4>
+                        <p>Log today's spending in seconds</p>
+                    </div>
+                </a>
+                <a href="split-expense-calculator.html" class="quick-link">
+                    <i class="fas fa-calculator"></i>
+                    <div class="quick-link-text">
+                        <h4>Split Expense Calculator</h4>
+                        <p>Fairly divide bills with friends</p>
+                    </div>
+                </a>
+                <a href="subscription-manager.html" class="quick-link">
+                    <i class="fas fa-credit-card"></i>
+                    <div class="quick-link-text">
+                        <h4>Subscription Manager</h4>
+                        <p>Track and cancel unused subscriptions</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-theme', currentTheme);
+        themeIcon.className = currentTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        themeToggle.addEventListener('click', () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', currentTheme);
+            themeIcon.className = currentTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('theme', currentTheme);
+        });
+    </script>
+</body>
+</html>

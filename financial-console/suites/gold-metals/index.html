@@ -1,1309 +1,620 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metal Price Calculator - Live Market Rates</title>
+    <title>Metals Hub | Financial Calculators</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
         :root {
-            /* Metal Colors */
-            --gold: #FFD700;
-            --gold-dark: #DAA520;
-            --gold-light: #FFF4CC;
-            --gold-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-
-            --silver: #C0C0C0;
-            --silver-dark: #A8A8A8;
-            --silver-light: #F5F5F5;
-            --silver-gradient: linear-gradient(135deg, #E8E8E8 0%, #C0C0C0 100%);
-
-            --platinum: #E5E4E2;
-            --platinum-dark: #8B8B83;
-            --platinum-light: #F8F8F6;
-            --platinum-gradient: linear-gradient(135deg, #E5E4E2 0%, #B5B5AC 100%);
-
-            --copper: #B87333;
-            --copper-dark: #A0522D;
-            --copper-light: #FFE4CC;
-            --copper-gradient: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
-
-            --palladium: #CED0DD;
-            --palladium-dark: #9EA1B3;
-            --palladium-light: #E8E9F0;
-            --palladium-gradient: linear-gradient(135deg, #CED0DD 0%, #9EA1B3 100%);
-
-            --rhodium: #E8E8E8;
-            --rhodium-dark: #B8B8B8;
-            --rhodium-light: #F9F9F9;
-            --rhodium-gradient: linear-gradient(135deg, #F0F0F0 0%, #D0D0D0 100%);
-
-            --accent: #00d4ff;
-            --success: #00ff88;
-            --warning: #ffaa00;
-            --error: #ff4444;
+            --bg: #0f0f23;
+            --panel: #1a1a2e;
+            --border: #2d2d4d;
+            --text: #e0e0ff;
+            --muted: #8a8ac4;
+            --accent: #94a3b8;
+            --accent-secondary: #64748b;
+            --accent-soft: rgba(148, 163, 184, 0.15);
+            --radius: 10px;
+            --transition-fast: 0.2s ease;
+            --transition: 0.3s ease;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
-
-        /* Dark Theme (Default) */
-        [data-theme="dark"] {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #151923;
-            --bg-card: #1a1f2e;
-            --bg-input: #242938;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --border: #2d3548;
-            --shadow: rgba(0, 0, 0, 0.3);
-        }
-
-        /* Light Theme */
         [data-theme="light"] {
-            --bg-primary: #f5f7fa;
-            --bg-secondary: #ffffff;
-            --bg-card: #ffffff;
-            --bg-input: #f8f9fa;
-            --text-primary: #1a1a1a;
-            --text-secondary: #6b6b6b;
-            --border: #e0e0e0;
-            --shadow: rgba(0, 0, 0, 0.1);
+            --bg: #f8f9fa;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --accent: #64748b;
+            --accent-secondary: #475569;
+            --accent-soft: rgba(100, 116, 139, 0.12);
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            padding: 1rem;
-            position: relative;
+            display: flex;
+            transition: background-color var(--transition), color var(--transition);
             overflow-x: hidden;
-            transition: background 0.3s ease, color 0.3s ease;
         }
-
-        body::before {
-            content: '';
+        .sidebar {
+            width: 260px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background:
-                radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-            opacity: 1;
-            transition: opacity 0.3s ease;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all var(--transition);
+            z-index: 100;
         }
-
-        [data-theme="light"] body::before {
-            opacity: 0.3;
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Header */
-        header {
-            text-align: center;
-            padding: 2rem 0 3rem;
-            animation: fadeInDown 0.6s ease-out;
-            position: relative;
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        h1 {
-            font-size: 3rem;
+        .brand { margin-bottom: 2rem; }
+        .brand-title {
+            font-size: 1.8rem;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--gold) 0%, var(--accent) 50%, var(--silver) 100%);
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 0.5rem;
-            letter-spacing: -1px;
+            color: transparent;
+            line-height: 1;
         }
-
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            font-weight: 400;
-        }
-
-        /* Theme Toggle */
-        .theme-toggle {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 50px;
-            padding: 0.5rem;
-            display: flex;
-            gap: 0.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px var(--shadow);
-        }
-
-        .theme-option {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .theme-option.active {
-            background: var(--accent);
-            transform: scale(1.1);
-        }
-
-        /* API Status */
-        .api-status {
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 16px;
-            padding: 1rem 1.5rem;
+        .brand-subtitle { font-size: 0.9rem; color: var(--muted); margin-top: 0.5rem; }
+        .meta-lines {
+            background: var(--accent-soft);
+            padding: 0.75rem;
+            border-radius: var(--radius);
             margin-bottom: 2rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            border: 1px solid var(--border);
+        }
+        .meta-lines span { display: block; color: var(--text); }
+        .meta-lines .highlight { color: var(--accent); font-weight: 600; }
+        .nav-items { flex: 1; }
+        .nav-item {
             display: flex;
             align-items: center;
+            padding: 0.85rem 1rem;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+        }
+        .nav-item:hover { background: var(--accent-soft); border-color: var(--border); transform: translateX(4px); }
+        .nav-item.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+        .nav-item i { margin-right: 0.75rem; width: 20px; text-align: center; }
+        .sidebar-footer { margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+        .workspace-pill {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            border: 1px solid var(--accent-soft);
+        }
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            max-width: calc(100% - 260px);
+            transition: margin-left var(--transition), max-width var(--transition);
+        }
+        .topbar {
+            display: flex;
             justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
             flex-wrap: wrap;
             gap: 1rem;
-            animation: fadeInUp 0.6s ease-out 0.05s both;
         }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .page-info h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
         }
-
-        .api-status-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .api-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--error);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .api-indicator.connected {
-            background: var(--success);
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        .api-info {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        .api-info strong {
-            color: var(--text-primary);
-            font-weight: 600;
-        }
-
-        .fetch-button {
-            padding: 0.75rem 1.5rem;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .page-info p { color: var(--muted); font-size: 0.95rem; }
+        .topbar-controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+        .back-btn {
+            padding: 0.75rem 1.25rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            text-decoration: none;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            transition: all var(--transition-fast);
+            font-size: 0.95rem;
         }
-
-        .fetch-button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
-        }
-
-        .fetch-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .fetch-button.loading {
-            pointer-events: none;
-        }
-
-        .spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid var(--bg-primary);
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-            display: none;
-        }
-
-        .fetch-button.loading .spinner {
-            display: block;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Global Controls */
-        .global-controls {
-            background: var(--bg-card);
+        .back-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+        .theme-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius);
+            background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            animation: fadeInUp 0.6s ease-out 0.1s both;
-            transition: all 0.3s ease;
-        }
-
-        .control-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .control-group {
-            position: relative;
-        }
-
-        .control-label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-            margin-bottom: 0.75rem;
-        }
-
-        input[type="number"],
-        input[type="text"],
-        select {
-            width: 100%;
-            padding: 1rem 1.25rem;
-            background: var(--bg-input);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        input[type="number"]:focus,
-        input[type="text"]:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--accent);
-            background: var(--bg-secondary);
-            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
-        }
-
-        /* Metal Tabs */
-        .metal-tabs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-            animation: fadeInUp 0.6s ease-out 0.2s both;
-        }
-
-        .metal-tab {
-            position: relative;
-            padding: 1.5rem 1.5rem;
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 16px;
+            color: var(--text);
             cursor: pointer;
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-
-        .metal-tab::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 0;
-        }
-
-        .metal-tab.gold::before {
-            background: var(--gold-gradient);
-        }
-
-        .metal-tab.silver::before {
-            background: var(--silver-gradient);
-        }
-
-        .metal-tab.platinum::before {
-            background: var(--platinum-gradient);
-        }
-
-        .metal-tab.copper::before {
-            background: var(--copper-gradient);
-        }
-
-        .metal-tab.palladium::before {
-            background: var(--palladium-gradient);
-        }
-
-        .metal-tab.rhodium::before {
-            background: var(--rhodium-gradient);
-        }
-
-        .metal-tab:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px var(--shadow);
-        }
-
-        .metal-tab:hover::before {
-            opacity: 0.15;
-        }
-
-        .metal-tab.active {
-            border-color: transparent;
-        }
-
-        .metal-tab.active::before {
-            opacity: 1;
-        }
-
-        .metal-tab-content {
-            position: relative;
-            z-index: 1;
-        }
-
-        .metal-tab.active .metal-tab-content {
-            color: #000;
-        }
-
-        [data-theme="light"] .metal-tab.active .metal-tab-content {
-            color: #000;
-        }
-
-        .metal-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        .metal-name {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-            display: block;
-        }
-
-        .metal-symbol {
-            font-size: 0.7rem;
-            font-weight: 500;
-            opacity: 0.8;
-            font-family: 'JetBrains Mono', monospace;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .metal-tab.active .metal-symbol {
-            opacity: 0.9;
-        }
-
-        /* Input Section */
-        .input-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            animation: fadeInUp 0.6s ease-out 0.3s both;
-            transition: all 0.3s ease;
-        }
-
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .section-icon {
-            width: 32px;
-            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--bg-input);
-            border-radius: 8px;
-            font-size: 1.2rem;
+            transition: all var(--transition-fast);
+            font-size: 1.1rem;
+        }
+        .theme-toggle:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--accent-soft), transparent);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        .hero-icon {
+            font-size: 3.5rem;
+            color: var(--accent);
+            opacity: 0.8;
+        }
+        .hero-content h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+        .hero-content p {
+            color: var(--muted);
+            line-height: 1.6;
         }
 
-        /* Results Grid */
-        .results-section {
-            animation: fadeInUp 0.6s ease-out 0.4s both;
+        /* Category Section */
+        .category-section { margin-bottom: 2rem; }
+        .category-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent);
         }
+        .category-title i { font-size: 1.1rem; }
 
-        .results-grid {
+        /* Tool Cards Grid */
+        .tools-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
+            gap: 1.25rem;
         }
-
-        .result-card {
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 16px;
-            padding: 1.75rem;
+        .tool-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text);
+            display: block;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
         }
-
-        .result-card::before {
-            content: '';
+        .tool-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(148, 163, 184, 0.15);
+        }
+        .tool-card::before {
+            content: "";
             position: absolute;
             top: 0;
             left: 0;
             width: 4px;
             height: 100%;
-            transition: width 0.3s ease;
+            background: linear-gradient(180deg, var(--accent), var(--accent-secondary));
+            opacity: 0;
+            transition: opacity var(--transition-fast);
         }
-
-        .result-card.gold::before {
-            background: var(--gold-gradient);
-        }
-
-        .result-card.silver::before {
-            background: var(--silver-gradient);
-        }
-
-        .result-card.platinum::before {
-            background: var(--platinum-gradient);
-        }
-
-        .result-card.copper::before {
-            background: var(--copper-gradient);
-        }
-
-        .result-card.palladium::before {
-            background: var(--palladium-gradient);
-        }
-
-        .result-card.rhodium::before {
-            background: var(--rhodium-gradient);
-        }
-
-        .result-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 32px var(--shadow);
-            border-color: var(--accent);
-        }
-
-        .result-card:hover::before {
-            width: 100%;
-            opacity: 0.1;
-        }
-
-        .result-header {
+        .tool-card:hover::before { opacity: 1; }
+        .tool-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-soft);
+            border-radius: var(--radius);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: var(--accent);
             margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
         }
-
-        .result-label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-        }
-
-        .purity-badge {
-            padding: 0.375rem 0.75rem;
-            border-radius: 8px;
-            font-size: 0.75rem;
+        .tool-card h3 {
+            font-size: 1.1rem;
             font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .result-card.gold .purity-badge {
-            background: var(--gold-light);
-            color: var(--gold-dark);
-        }
-
-        .result-card.silver .purity-badge {
-            background: var(--silver-light);
-            color: var(--silver-dark);
-        }
-
-        .result-card.platinum .purity-badge {
-            background: var(--platinum-light);
-            color: var(--platinum-dark);
-        }
-
-        .result-card.copper .purity-badge {
-            background: var(--copper-light);
-            color: var(--copper-dark);
-        }
-
-        .result-card.palladium .purity-badge {
-            background: var(--palladium-light);
-            color: var(--palladium-dark);
-        }
-
-        .result-card.rhodium .purity-badge {
-            background: var(--rhodium-light);
-            color: var(--rhodium-dark);
-        }
-
-        .result-price {
-            font-size: 2rem;
-            font-weight: 800;
-            font-family: 'JetBrains Mono', monospace;
             margin-bottom: 0.5rem;
-            color: var(--text-primary);
         }
-
-        .result-weight {
+        .tool-card p {
             font-size: 0.9rem;
-            color: var(--text-secondary);
-            font-weight: 500;
+            color: var(--muted);
+            line-height: 1.5;
         }
-
-        /* Reverse Calculator */
-        .reverse-section {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
+        .tool-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
             border-radius: 20px;
-            padding: 2rem;
-            margin-top: 2rem;
-            animation: fadeInUp 0.6s ease-out 0.5s both;
-            transition: all 0.3s ease;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.75rem;
+            background: var(--accent-soft);
+            color: var(--accent);
         }
 
-        .reverse-grid {
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-item {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* Quick Links */
+        .quick-links {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .reverse-result {
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .reverse-result-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-            margin-bottom: 0.75rem;
-        }
-
-        .reverse-result-value {
-            font-size: 2rem;
-            font-weight: 800;
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--success);
-        }
-
-        /* Info Card */
-        .info-card {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%);
-            border: 1px solid rgba(0, 212, 255, 0.2);
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-top: 1.5rem;
-            display: flex;
-            align-items: start;
             gap: 1rem;
-            transition: all 0.3s ease;
         }
-
-        .info-icon {
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            text-decoration: none;
+            color: var(--text);
+            transition: all var(--transition-fast);
+        }
+        .quick-link:hover {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+        .quick-link i {
             font-size: 1.5rem;
-            flex-shrink: 0;
+            color: var(--accent);
         }
-
-        .info-text {
-            font-size: 0.875rem;
-            line-height: 1.6;
-            color: var(--text-secondary);
+        .quick-link-text h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
         }
-
-        .info-text strong {
-            color: var(--text-primary);
-            font-weight: 600;
+        .quick-link-text p {
+            font-size: 0.85rem;
+            color: var(--muted);
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
-
-            .theme-toggle {
-                position: relative;
-                margin: 0 auto 1rem;
-            }
-
-            .metal-tabs {
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            }
-
-            .metal-icon {
-                font-size: 1.5rem;
-            }
-
-            .metal-name {
-                font-size: 0.95rem;
-            }
-
-            .results-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .api-status {
-                flex-direction: column;
-            }
+            .sidebar { width: 60px; padding: 1rem; }
+            .brand-title, .brand-subtitle, .meta-lines, .nav-item span { display: none; }
+            .nav-item { justify-content: center; padding: 0.75rem; }
+            .nav-item i { margin: 0; }
+            .main-content { margin-left: 60px; max-width: calc(100% - 60px); padding: 1rem; }
+            .topbar { flex-direction: column; align-items: flex-start; }
+            .hero { flex-direction: column; text-align: center; padding: 1.5rem; }
+            .hero-icon { font-size: 2.5rem; }
+            .tools-grid { grid-template-columns: 1fr; }
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+            .stats-bar { grid-template-columns: 1fr; }
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body data-theme="dark">
-    <div class="container">
-        <header>
-            <div class="theme-toggle" id="themeToggle">
-                <div class="theme-option" data-theme="light">☀️</div>
-                <div class="theme-option active" data-theme="dark">🌙</div>
-            </div>
-            <h1>⚡ Metal Price Calculator</h1>
-            <p class="subtitle">Real-time market price conversion with live exchange rates</p>
-        </header>
-
-        <!-- API Status -->
-        <div class="api-status">
-            <div class="api-status-left">
-                <div class="api-indicator" id="apiIndicator"></div>
-                <div class="api-info">
-                    <strong>API Status:</strong> <span id="apiStatusText">Not Connected</span>
-                    <span id="apiUsage" style="margin-left: 1rem;"></span>
-                </div>
-            </div>
-            <button class="fetch-button" id="fetchButton">
-                <span class="spinner"></span>
-                <span id="fetchButtonText">📡 Fetch Live Prices</span>
-            </button>
+    <div class="sidebar">
+        <div class="brand">
+            <div class="brand-title">Finance Console</div>
+            <div class="brand-subtitle">Financial Tools & Personal Wealth Calculators</div>
         </div>
-
-        <!-- API Key Input -->
-        <div class="global-controls">
-            <div class="control-grid">
-                <div class="control-group">
-                    <label class="control-label">🔑 Metals API Key</label>
-                    <input type="text" id="apiKey" placeholder="Enter your metals-api.com API key">
-                </div>
-                <div class="control-group">
-                    <label class="control-label">💱 USD to INR Rate</label>
-                    <input type="number" id="usdInr" placeholder="83.50" step="0.01" value="83.50">
-                </div>
-                <div class="control-group">
-                    <label class="control-label">📊 GST Rate (%)</label>
-                    <input type="number" id="gstRate" placeholder="3" step="0.1" value="3">
-                </div>
-            </div>
-            <div class="info-card">
-                <span class="info-icon">💡</span>
-                <div class="info-text">
-                    <strong>Get your free API key:</strong> Visit <a href="https://metals-api.com" target="_blank"
-                        style="color: var(--accent);">metals-api.com</a> and sign up for a free account (100
-                    requests/month). Enter your API key above and click "Fetch Live Prices" to auto-populate current
-                    market rates.
-                </div>
-            </div>
+        <div class="meta-lines">
+            <span class="highlight">Wealth Planning · Tax Optimization · ROI · Investments</span>
+            <span>SIP · SWP · FD · RD · Loans · Forex · Gold · Solar</span>
         </div>
+        <div class="nav-items">
+            <a href="../../../index.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+            <a href="../index.html" class="nav-item"><i class="fas fa-calculator"></i><span>Financial Calculators</span></a>
+            <a href="../taxes/index.html" class="nav-item">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Taxes</span>
+            </a>
+            <a href="../trading/index.html" class="nav-item">
+                <i class="fas fa-arrow-trend-up"></i>
+                <span>Trading</span>
+            </a>
+            <a href="../realty/index.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Realty</span>
+            </a>
 
-        <!-- Metal Selection -->
-        <div class="metal-tabs" id="metalTabs">
-            <button class="metal-tab gold active" data-metal="gold">
-                <div class="metal-tab-content">
-                    <span class="metal-icon">🥇</span>
-                    <span class="metal-name">Gold</span>
-                    <span class="metal-symbol">XAU/USD • LBMA</span>
-                </div>
-            </button>
-            <button class="metal-tab silver" data-metal="silver">
-                <div class="metal-tab-content">
-                    <span class="metal-icon">🥈</span>
-                    <span class="metal-name">Silver</span>
-                    <span class="metal-symbol">XAG/USD • LBMA</span>
-                </div>
-            </button>
-            <button class="metal-tab platinum" data-metal="platinum">
-                <div class="metal-tab-content">
-                    <span class="metal-icon">💎</span>
-                    <span class="metal-name">Platinum</span>
-                    <span class="metal-symbol">XPT/USD • NYMEX</span>
-                </div>
-            </button>
-            <button class="metal-tab copper" data-metal="copper">
-                <div class="metal-tab-content">
-                    <span class="metal-icon">🔶</span>
-                    <span class="metal-name">Copper</span>
-                    <span class="metal-symbol">HG/USD • COMEX</span>
-                </div>
-            </button>
-            <button class="metal-tab palladium" data-metal="palladium">
-                <div class="metal-tab-content">
-                    <span class="metal-icon">⚪</span>
-                    <span class="metal-name">Palladium</span>
-                    <span class="metal-symbol">XPD/USD • NYMEX</span>
-                </div>
-            </button>
-            <button class="metal-tab rhodium" data-metal="rhodium">
-                <div class="metal-tab-content">
-                    <span class="metal-icon">✨</span>
-                    <span class="metal-name">Rhodium</span>
-                    <span class="metal-symbol">Johnson Matthey</span>
-                </div>
-            </button>
+            <a href="../gold-metals/index.html" class="nav-item">
+                <i class="fas fa-gem"></i>
+                <span>Gold & Metals</span>
+            </a>
+            <a href="../tracker/index.html" class="nav-item">
+                <i class="fa-solid fa-arrows-turn-to-dots"></i>
+                <span>Tracker</span>
+            </a>
+            <a href="../currency-tools/index.html" class="nav-item">
+                <i class="fas fa-globe"></i>
+                <span>Currency Tools</span>
+            </a>
+            <a href="../solar-power/index.html" class="nav-item">
+                <i class="fas fa-solar-panel"></i>
+                <span>Solar Power</span>
+            </a>
+            <a href="../../../index.html" class="nav-item">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Portfolio</span>
+            </a>
         </div>
+        <div class="sidebar-footer">
+            <div class="workspace-pill">Metals & Commodities</div>
+        </div>
+    </div>
 
-        <!-- Input Section -->
-        <div class="input-section">
-            <h2 class="section-title">
-                <span class="section-icon">📈</span>
-                <span id="currentMetalName">Gold</span> Price (USD/oz)
-            </h2>
-            <div class="control-grid">
-                <div class="control-group">
-                    <label class="control-label" id="priceLabel">Price (USD per troy ounce)</label>
-                    <input type="number" id="metalPrice" placeholder="2650.00" step="0.01">
-                </div>
+    <div class="main-content">
+        <div class="topbar">
+            <div class="page-info">
+                <h1>Metals & Commodities Hub</h1>
+                <p>Precious metals pricing, purity calculators, investment analysis & industrial metal tracking</p>
             </div>
-            <div class="info-card">
-                <span class="info-icon">💡</span>
-                <div class="info-text">
-                    <strong>Market References:</strong><br>
-                    <strong>Gold:</strong> XAU/USD (Kitco, LBMA, Trading Economics)<br>
-                    <strong>Silver:</strong> XAG/USD (Kitco, LBMA, Trading Economics)<br>
-                    <strong>Platinum:</strong> XPT/USD (NYMEX, Kitco)<br>
-                    <strong>Copper:</strong> HG/USD (COMEX, LME)<br>
-                    <strong>Palladium:</strong> XPD/USD (NYMEX, Kitco)<br>
-                    <strong>Rhodium:</strong> Johnson Matthey pricing
-                </div>
+            <div class="topbar-controls">
+                <a href="../../../index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
+                <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
             </div>
         </div>
 
-        <!-- Results Section -->
-        <div class="results-section">
-            <h2 class="section-title">
-                <span class="section-icon">💰</span>
-                Calculated Prices (INR)
-            </h2>
-            <div class="results-grid" id="resultsGrid">
-                <!-- Results will be populated here -->
+        <!-- Hero -->
+        <div class="hero">
+            <div class="hero-icon"><i class="fas fa-cubes"></i></div>
+            <div class="hero-content">
+                <h2>Your Complete Metals Intelligence Platform</h2>
+                <p>From 24K gold valuation to silver ETF analysis, platinum pricing to copper futures. Track live rates, verify purity, calculate investment returns, and make data-driven decisions in the precious & industrial metals market.</p>
             </div>
         </div>
 
-        <!-- Reverse Calculator -->
-        <div class="reverse-section">
-            <h2 class="section-title">
-                <span class="section-icon">🔄</span>
-                Reverse Calculator
-            </h2>
-            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
-                Enter INR price per gram to find the equivalent USD/oz market price
-            </p>
-            <div class="reverse-grid">
-                <div class="control-group">
-                    <label class="control-label">INR Price (per gram)</label>
-                    <input type="number" id="inrPrice" placeholder="7500.00" step="0.01">
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Purity Level</label>
-                    <select id="puritySelect">
-                        <!-- Options populated dynamically -->
-                    </select>
-                </div>
-                <div class="reverse-result">
-                    <div class="reverse-result-label">Equivalent USD/oz</div>
-                    <div class="reverse-result-value" id="reverseResult">—</div>
-                </div>
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value">₹74.5K</div>
+                <div class="stat-label">24K Gold (10g)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">₹94.2K</div>
+                <div class="stat-label">Silver (1kg)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">999.9</div>
+                <div class="stat-label">Fine Purity Standard</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">15+</div>
+                <div class="stat-label">Metal Calculators</div>
+            </div>
+        </div>
+
+        <!-- Precious Metals Trading -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-gem"></i> Precious Metals & Bullion</div>
+            <div class="tools-grid">
+                <a href="live-gold-price.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-coins"></i></div>
+                    <h3>Live Gold Price Tracker</h3>
+                    <p>Real-time 22K & 24K gold rates across major Indian cities with historical charts.</p>
+                    <span class="tool-badge">Most Popular</span>
+                </a>
+                <a href="live-silver-price.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-cube"></i></div>
+                    <h3>Live Silver Price Tracker</h3>
+                    <p>Track silver rates per gram, kg, and tola with city-wise variations and trends.</p>
+                </a>
+                <a href="platinum-palladium.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-ring"></i></div>
+                    <h3>Platinum & Palladium Rates</h3>
+                    <p>Monitor white metal prices, industrial demand drivers, and investment viability.</p>
+                </a>
+                <a href="bullion-comparison.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-balance-scale"></i></div>
+                    <h3>Bullion Comparison Tool</h3>
+                    <p>Compare gold vs silver vs platinum performance, volatility, and storage costs.</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Investment Vehicles -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-chart-line"></i> Metal Investment Vehicles</div>
+            <div class="tools-grid">
+                <a href="sgb-calculator.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-landmark"></i></div>
+                    <h3>Sovereign Gold Bond (SGB) Calculator</h3>
+                    <p>Calculate SGB returns, interest payout, capital gains tax exemption, and maturity value.</p>
+                    <span class="tool-badge">Tax Efficient</span>
+                </a>
+                <a href="gold-etf-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <h3>Gold ETF Analyzer</h3>
+                    <p>Track NAV, expense ratios, tracking error, and compare top gold ETFs in India.</p>
+                </a>
+                <a href="digital-gold-calculator.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-mobile-alt"></i></div>
+                    <h3>Digital Gold Investment Tracker</h3>
+                    <p>Compare Paytm, PhonePe, Google Pay digital gold rates, fees, and withdrawal limits.</p>
+                </a>
+                <a href="metal-mutual-funds.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-chart-pie"></i></div>
+                    <h3>Metal-Focused Mutual Funds</h3>
+                    <p>Analyze commodity & metal sector funds, historical returns, and risk metrics.</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Purity & Hallmarking -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-certificate"></i> Purity & Hallmarking</div>
+            <div class="tools-grid">
+                <a href="karat-calculator.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-percentage"></i></div>
+                    <h3>Karat to Purity Converter</h3>
+                    <p>Convert 24K, 22K, 18K, 14K to percentage purity and calculate actual gold content.</p>
+                    <span class="tool-badge">Essential</span>
+                </a>
+                <a href="hallmark-verify.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Hallmark Verification Guide</h3>
+                    <p>Decode HUID numbers, BIS marks, and verify jewelry authenticity step-by-step.</p>
+                </a>
+                <a href="gold-testing-methods.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-flask"></i></div>
+                    <h3>Gold Testing Methods</h3>
+                    <p>Acid test, magnet test, density check, and XRF analysis explained with accuracy rates.</p>
+                </a>
+                <a href="making-charges-calc.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-tools"></i></div>
+                    <h3>Making Charges Calculator</h3>
+                    <p>Estimate jewelry making charges, GST, and final payable amount before purchase.</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Industrial & Base Metals -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-industry"></i> Industrial & Base Metals</div>
+            <div class="tools-grid">
+                <a href="copper-price-tracker.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-bolt"></i></div>
+                    <h3>Copper Price Tracker</h3>
+                    <p>Monitor LME & MCX copper rates, global demand trends, and EV sector impact.</p>
+                </a>
+                <a href="aluminum-market.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-ship"></i></div>
+                    <h3>Aluminum Market Analyzer</h3>
+                    <p>Track aluminum ingot prices, scrap rates, and automotive/aerospace demand cycles.</p>
+                </a>
+                <a href="steel-price-index.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-hard-hat"></i></div>
+                    <h3>Steel Price Index</h3>
+                    <p>Real-time TMT, structural steel, and scrap prices across Indian industrial hubs.</p>
+                </a>
+                <a href="zinc-lead-nickel.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-battery-three-quarters"></i></div>
+                    <h3>Zinc, Lead & Nickel Tracker</h3>
+                    <p>Monitor battery metals, galvanization demand, and global supply chain shifts.</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Calculators & Converters -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-calculator"></i> Calculators & Converters</div>
+            <div class="tools-grid">
+                <a href="metal-calc.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-weight-hanging"></i></div>
+                    <h3>Metal Weight Converter</h3>
+                    <p>Convert grams, tola, sovereign, ounces, kilograms instantly with density adjustments.</p>
+                </a>
+                <a href="gold-roi-calculator.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-chart-area"></i></div>
+                    <h3>Gold Investment ROI Calculator</h3>
+                    <p>Calculate absolute & annualized returns on physical gold, ETFs, or SGB investments.</p>
+                </a>
+                <a href="silver-jewelry-cost.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-gem"></i></div>
+                    <h3>Silver Jewelry Cost Estimator</h3>
+                    <p>Factor in silver rate, making charges, GST, and stone costs for accurate pricing.</p>
+                </a>
+                <a href="metal-storage-cost.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-vault"></i></div>
+                    <h3>Bullion Storage Cost Calculator</h3>
+                    <p>Compare bank locker, home safe, and allocated vault costs with insurance premiums.</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="category-section">
+            <div class="category-title"><i class="fas fa-link"></i> Quick Access</div>
+            <div class="quick-links">
+                <a href="metal-calc.html" class="tool-card">
+                    <div class="tool-icon"><i class="fas fa-weight-hanging"></i></div>
+                    <h3>Metal Weight Converter</h3>
+                    <p>Convert grams, tola, sovereign, ounces, kilograms instantly with density adjustments.</p>
+                </a>
+                <a href="karat-calculator.html" class="quick-link">
+                    <i class="fas fa-percentage"></i>
+                    <div class="quick-link-text">
+                        <h4>Karat Calculator</h4>
+                        <p>Convert purity & verify actual gold content</p>
+                    </div>
+                </a>
+                <a href="sgb-calculator.html" class="quick-link">
+                    <i class="fas fa-landmark"></i>
+                    <div class="quick-link-text">
+                        <h4>SGB Returns</h4>
+                        <p>Calculate tax-free gold bond maturity value</p>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
 
     <script>
-        /***********************
-         * CONSTANTS
-         ***********************/
-        const TROY_OUNCE_IN_GRAMS = 31.1034768;
-
-        const METALS = {
-            gold: {
-                purity: {
-                    '24K': 1.0,
-                    '22K': 0.916,
-                    '18K': 0.75,
-                    '14K': 0.585
-                },
-                importDuty: 0.15,
-                weights: [1, 8, 10],
-                displayName: 'Gold',
-                symbol: 'XAU/USD',
-                apiSymbol: 'XAU',
-                icon: '🥇'
-            },
-            silver: {
-                purity: {
-                    '999': 0.999,
-                    '925': 0.925
-                },
-                importDuty: 0.10,
-                weights: [1, 10, 100],
-                displayName: 'Silver',
-                symbol: 'XAG/USD',
-                apiSymbol: 'XAG',
-                icon: '🥈'
-            },
-            platinum: {
-                purity: {
-                    '999': 0.999,
-                    '950': 0.950
-                },
-                importDuty: 0.15,
-                weights: [1, 10, 31.1],
-                displayName: 'Platinum',
-                symbol: 'XPT/USD',
-                apiSymbol: 'XPT',
-                icon: '💎'
-            },
-            copper: {
-                purity: {
-                    '995': 0.995,
-                    '999': 0.999
-                },
-                importDuty: 0.075,
-                weights: [1, 10, 100],
-                displayName: 'Copper',
-                symbol: 'HG/USD',
-                apiSymbol: 'COPPER',
-                icon: '🔶'
-            },
-            palladium: {
-                purity: {
-                    '999': 0.999,
-                    '950': 0.950
-                },
-                importDuty: 0.15,
-                weights: [1, 10, 31.1],
-                displayName: 'Palladium',
-                symbol: 'XPD/USD',
-                apiSymbol: 'XPD',
-                icon: '⚪'
-            },
-            rhodium: {
-                purity: {
-                    '999': 0.999
-                },
-                importDuty: 0.15,
-                weights: [1, 10, 31.1],
-                displayName: 'Rhodium',
-                symbol: 'Rh',
-                apiSymbol: 'XRH',
-                icon: '✨'
-            }
-        };
-
-        /***********************
-         * CORE HELPERS
-         ***********************/
-        function usdOzToInrPerGram(usdPerOz, usdInr) {
-            return (usdPerOz * usdInr) / TROY_OUNCE_IN_GRAMS;
-        }
-
-        function inrPerGramToUsdOz(inrPerGram, usdInr) {
-            return (inrPerGram * TROY_OUNCE_IN_GRAMS) / usdInr;
-        }
-
-        function applyTaxes(basePrice, importDutyRate, gstRate) {
-            return basePrice * (1 + importDutyRate) * (1 + gstRate);
-        }
-
-        function removeTaxes(taxedPrice, importDutyRate, gstRate) {
-            return taxedPrice / ((1 + importDutyRate) * (1 + gstRate));
-        }
-
-        function calculateMetalPrice({
-            usdPerOz,
-            usdInr,
-            purityFactor,
-            importDutyRate,
-            gstRate,
-            grams
-        }) {
-            const basePerGram = usdOzToInrPerGram(usdPerOz, usdInr);
-            const purityAdjusted = basePerGram * purityFactor;
-            const taxedPrice = applyTaxes(purityAdjusted, importDutyRate, gstRate);
-            return Math.round(taxedPrice * grams);
-        }
-
-        function reverseCalculateUsdOz({
-            inrPerGram,
-            usdInr,
-            purityFactor,
-            importDutyRate,
-            gstRate
-        }) {
-            const priceWithoutTaxes = removeTaxes(inrPerGram, importDutyRate, gstRate);
-            const basePerGram = priceWithoutTaxes / purityFactor;
-            return inrPerGramToUsdOz(basePerGram, usdInr);
-        }
-
-        /***********************
-         * UI STATE
-         ***********************/
-        let currentMetal = 'gold';
-
-        const elements = {
-            themeToggle: document.getElementById('themeToggle'),
-            themeOptions: document.querySelectorAll('.theme-option'),
-            metalTabs: document.querySelectorAll('.metal-tab'),
-            metalPrice: document.getElementById('metalPrice'),
-            usdInr: document.getElementById('usdInr'),
-            gstRate: document.getElementById('gstRate'),
-            resultsGrid: document.getElementById('resultsGrid'),
-            inrPrice: document.getElementById('inrPrice'),
-            puritySelect: document.getElementById('puritySelect'),
-            reverseResult: document.getElementById('reverseResult'),
-            currentMetalName: document.getElementById('currentMetalName'),
-            priceLabel: document.getElementById('priceLabel'),
-            apiKey: document.getElementById('apiKey'),
-            fetchButton: document.getElementById('fetchButton'),
-            fetchButtonText: document.getElementById('fetchButtonText'),
-            apiIndicator: document.getElementById('apiIndicator'),
-            apiStatusText: document.getElementById('apiStatusText'),
-            apiUsage: document.getElementById('apiUsage')
-        };
-
-        /***********************
-         * THEME TOGGLE
-         ***********************/
-        elements.themeOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                const theme = option.dataset.theme;
-                document.body.setAttribute('data-theme', theme);
-                elements.themeOptions.forEach(opt => opt.classList.remove('active'));
-                option.classList.add('active');
-                localStorage.setItem('theme', theme);
-            });
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-theme', currentTheme);
+        themeIcon.className = currentTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        themeToggle.addEventListener('click', () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', currentTheme);
+            themeIcon.className = currentTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('theme', currentTheme);
         });
-
-        // Load saved theme
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        document.body.setAttribute('data-theme', savedTheme);
-        elements.themeOptions.forEach(opt => {
-            if (opt.dataset.theme === savedTheme) {
-                opt.classList.add('active');
-            } else {
-                opt.classList.remove('active');
-            }
-        });
-
-        /***********************
-         * METALS API INTEGRATION
-         ***********************/
-        async function fetchMetalPrices() {
-            const apiKey = elements.apiKey.value.trim();
-
-            if (!apiKey) {
-                alert('Please enter your Metals API key');
-                return;
-            }
-
-            elements.fetchButton.classList.add('loading');
-            elements.fetchButton.disabled = true;
-            elements.fetchButtonText.textContent = 'Fetching...';
-
-            try {
-                // Metals API endpoint
-                const symbols = 'XAU,XAG,XPT,XPD,COPPER';
-                const url = `https://metals-api.com/api/latest?access_key=${apiKey}&base=USD&symbols=${symbols}`;
-
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (data.success) {
-                    // Update API status
-                    elements.apiIndicator.classList.add('connected');
-                    elements.apiStatusText.textContent = 'Connected';
-
-                    // Convert rates (API returns USD per unit, we need USD per oz)
-                    // Metals API returns grams, we need troy ounces
-                    if (data.rates) {
-                        // XAU is in USD per troy ounce
-                        if (data.rates.XAU) {
-                            document.querySelector('[data-metal="gold"]').dataset.livePrice = (1 / data.rates.XAU).toFixed(2);
-                        }
-                        if (data.rates.XAG) {
-                            document.querySelector('[data-metal="silver"]').dataset.livePrice = (1 / data.rates.XAG).toFixed(2);
-                        }
-                        if (data.rates.XPT) {
-                            document.querySelector('[data-metal="platinum"]').dataset.livePrice = (1 / data.rates.XPT).toFixed(2);
-                        }
-                        if (data.rates.XPD) {
-                            document.querySelector('[data-metal="palladium"]').dataset.livePrice = (1 / data.rates.XPD).toFixed(2);
-                        }
-                        if (data.rates.COPPER) {
-                            // Copper is typically per pound, convert to per ounce
-                            document.querySelector('[data-metal="copper"]').dataset.livePrice = (1 / data.rates.COPPER).toFixed(4);
-                        }
-                    }
-
-                    // Auto-populate current metal price
-                    const currentTab = document.querySelector('.metal-tab.active');
-                    if (currentTab.dataset.livePrice) {
-                        elements.metalPrice.value = currentTab.dataset.livePrice;
-                        calculate();
-                    }
-
-                    // Show usage info if available
-                    if (data.usage) {
-                        elements.apiUsage.textContent = `Usage: ${data.usage.requests_used || 0}/100`;
-                    }
-
-                    alert('✅ Live prices fetched successfully! Prices auto-populated for current metal.');
-                } else {
-                    throw new Error(data.error?.info || 'Failed to fetch data');
-                }
-            } catch (error) {
-                elements.apiIndicator.classList.remove('connected');
-                elements.apiStatusText.textContent = 'Error';
-                alert(`Error fetching prices: ${error.message}\n\nMake sure your API key is correct and you haven't exceeded the rate limit.`);
-            } finally {
-                elements.fetchButton.classList.remove('loading');
-                elements.fetchButton.disabled = false;
-                elements.fetchButtonText.textContent = '📡 Fetch Live Prices';
-            }
-        }
-
-        elements.fetchButton.addEventListener('click', fetchMetalPrices);
-
-        // Load saved API key
-        const savedApiKey = localStorage.getItem('metalsApiKey');
-        if (savedApiKey) {
-            elements.apiKey.value = savedApiKey;
-        }
-
-        // Save API key on change
-        elements.apiKey.addEventListener('change', () => {
-            localStorage.setItem('metalsApiKey', elements.apiKey.value);
-        });
-
-        /***********************
-         * EVENT LISTENERS
-         ***********************/
-        elements.metalTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                elements.metalTabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                currentMetal = tab.dataset.metal;
-
-                // Auto-populate live price if available
-                if (tab.dataset.livePrice) {
-                    elements.metalPrice.value = tab.dataset.livePrice;
-                }
-
-                updateMetalInfo();
-                updatePuritySelect();
-                calculate();
-            });
-        });
-
-        elements.metalPrice.addEventListener('input', calculate);
-        elements.usdInr.addEventListener('input', calculate);
-        elements.gstRate.addEventListener('input', calculate);
-        elements.inrPrice.addEventListener('input', reverseCalculate);
-        elements.puritySelect.addEventListener('change', reverseCalculate);
-
-        /***********************
-         * CALCULATION FUNCTIONS
-         ***********************/
-        function calculate() {
-            const usdPerOz = parseFloat(elements.metalPrice.value);
-            const usdInr = parseFloat(elements.usdInr.value);
-            const gstRate = parseFloat(elements.gstRate.value) / 100;
-
-            if (!usdPerOz || !usdInr || isNaN(gstRate)) {
-                elements.resultsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">Please enter all required values</p>';
-                return;
-            }
-
-            const metal = METALS[currentMetal];
-            const results = [];
-
-            Object.entries(metal.purity).forEach(([purityKey, purityFactor]) => {
-                metal.weights.forEach(weight => {
-                    const price = calculateMetalPrice({
-                        usdPerOz,
-                        usdInr,
-                        purityFactor,
-                        importDutyRate: metal.importDuty,
-                        gstRate,
-                        grams: weight
-                    });
-
-                    results.push({
-                        purity: purityKey,
-                        weight,
-                        price
-                    });
-                });
-            });
-
-            renderResults(results);
-            reverseCalculate();
-        }
-
-        function reverseCalculate() {
-            const inrPrice = parseFloat(elements.inrPrice.value);
-            const usdInr = parseFloat(elements.usdInr.value);
-            const gstRate = parseFloat(elements.gstRate.value) / 100;
-            const selectedPurity = elements.puritySelect.value;
-
-            if (!inrPrice || !usdInr || isNaN(gstRate) || !selectedPurity) {
-                elements.reverseResult.textContent = '—';
-                return;
-            }
-
-            const metal = METALS[currentMetal];
-            const purityFactor = metal.purity[selectedPurity];
-
-            const usdOz = reverseCalculateUsdOz({
-                inrPerGram: inrPrice,
-                usdInr,
-                purityFactor,
-                importDutyRate: metal.importDuty,
-                gstRate
-            });
-
-            elements.reverseResult.textContent = `$${usdOz.toFixed(2)}`;
-        }
-
-        /***********************
-         * UI RENDERING
-         ***********************/
-        function renderResults(results) {
-            elements.resultsGrid.innerHTML = results.map(({ purity, weight, price }) => `
-        <div class="result-card ${currentMetal}">
-          <div class="result-header">
-            <span class="result-label">${METALS[currentMetal].displayName}</span>
-            <span class="purity-badge">${purity}</span>
-          </div>
-          <div class="result-price">₹${price.toLocaleString('en-IN')}</div>
-          <div class="result-weight">${weight}g ${weight === 31.1 ? '(1 oz)' : ''}</div>
-        </div>
-      `).join('');
-        }
-
-        function updatePuritySelect() {
-            const metal = METALS[currentMetal];
-            elements.puritySelect.innerHTML = Object.keys(metal.purity).map(purity =>
-                `<option value="${purity}">${purity}</option>`
-            ).join('');
-            reverseCalculate();
-        }
-
-        function updateMetalInfo() {
-            const metal = METALS[currentMetal];
-            elements.currentMetalName.textContent = metal.displayName;
-            elements.priceLabel.textContent = `${metal.symbol} Price (USD per troy ounce)`;
-        }
-
-        /***********************
-         * INITIALIZATION
-         ***********************/
-        updateMetalInfo();
-        updatePuritySelect();
-
-        // Set default prices for demo
-        elements.metalPrice.value = '2650.00';
-        calculate();
     </script>
 </body>
-
 </html>

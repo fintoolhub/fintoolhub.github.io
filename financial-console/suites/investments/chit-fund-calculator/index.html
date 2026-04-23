@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chit Fund Scheduler</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #1e40af;
+      --success: #166534;
+      --danger: #991b1b;
+    }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --card: #1e2937;
+      --text: #e2e8f0;
+      --border: #334155;
+      --row-even: #1e2937;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg, #f8fafc);
+      color: var(--text, #1e2937);
+      line-height: 1.6;
+    }
+    .container { max-width: 1280px; margin: 0 auto; padding: 20px; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    h1 { margin: 0; color: var(--primary); }
+    .controls {
+      background: var(--card, white);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
+      border: 1px solid var(--border, #e2e8f0);
+    }
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border, #cbd5e1);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(30,64,175,0.2);
+    }
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-secondary { background: #64748b; }
+    .btn-danger { background: #991b1b; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card, white);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+    th, td {
+      padding: 14px 16px;
+      text-align: right;
+      border-bottom: 1px solid var(--border, #e2e8f0);
+    }
+    th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 10; }
+    td:first-child, th:first-child { text-align: center; }
+    tr:nth-child(even) { background: var(--row-even, #f8fafc); }
+    .highlight-low { background: #fef3c7 !important; }
+    .highlight-high { background: #ecfdf5 !important; }
+    [data-theme="dark"] .highlight-low { background: #78350f !important; }
+    [data-theme="dark"] .highlight-high { background: #14532d !important; }
+
+    .chart-container, .insights-container {
+      background: var(--card, white);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      border: 1px solid var(--border, #e2e8f0);
+    }
+    canvas { width: 100% !important; height: 380px !important; }
+
+    .legend {
+      display: flex;
+      gap: 25px;
+      justify-content: center;
+      margin-top: 15px;
+      font-size: 0.95rem;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-color { width: 16px; height: 4px; border-radius: 2px; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: var(--card, white);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      border: 1px solid var(--border, #e2e8f0);
+    }
+    .total-row { font-weight: 700; background: #f1f5f9 !important; }
+    [data-theme="dark"] .total-row { background: #334155 !important; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .insights-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+    }
+    .insight-card {
+      padding: 15px;
+      background: var(--row-even, #f8fafc);
+      border-radius: 8px;
+      border: 1px solid var(--border, #e2e8f0);
+    }
+    @media print {
+      .controls, .actions, .chart-container, .insights-container, .theme-toggle { display: none !important; }
+      body { background: white; color: black; }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <div class="container">
+    <header>
+      <div>
+        <h1>💰 Chit Fund Scheduler</h1>
+        <input type="text" id="schemeName" value="My Chit Fund - April 2026" 
+               style="margin-top:8px; width:380px; font-size:1.1rem; font-weight:600;" 
+               placeholder="Scheme Name">
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button onclick="toggleTheme()" class="theme-toggle">🌙 Toggle Theme</button>
+        <button onclick="resetAll()" class="btn btn-danger">🔄 Reset All</button>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="input-grid">
+        <div>
+          <label>Chit Amount (₹)</label>
+          <input type="number" id="chitAmount" value="500000" oninput="calculate()">
+        </div>
+        <div>
+          <label>Total Months / Members</label>
+          <input type="number" id="totalMonths" value="20" oninput="calculate()">
+        </div>
+        <div>
+          <label>Start Month</label>
+          <select id="startMonth" onchange="calculate()">
+            <option value="0">January</option>
+            <option value="1">February</option>
+            <option value="2">March</option>
+            <option value="3" selected>May</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+        <div>
+          <label>Start Year</label>
+          <input type="number" id="startYear" value="2026" oninput="calculate()">
+        </div>
+        <div>
+          <label>Foreman Commission Type</label>
+          <select id="kasirType" onchange="toggleKasirMode()">
+            <option value="percent">Percentage of Discount</option>
+            <option value="manual">Manual per month</option>
+          </select>
+        </div>
+        <div id="percentContainer">
+          <label>Kasir %</label>
+          <input type="number" id="kasirPercent" value="5" step="0.1" oninput="calculate()">
+        </div>
+      </div>
+      <div style="margin-top: 20px; display: flex; gap: 12px;">
+        <button onclick="generateAutoDiscount()" class="btn">Generate Linear Discount</button>
+        <button onclick="calculate()" class="btn btn-secondary">Recalculate</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <table id="chitTable">
+      <thead>
+        <tr>
+          <th>Chit No</th>
+          <th>Installment Month</th>
+          <th>Chit Amount</th>
+          <th>Discount (₹)</th>
+          <th>Kasir (₹)</th>
+          <th>Monthly Payment Due (₹)</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td colspan="3"><strong>TOTAL</strong></td>
+          <td id="totalDiscount">₹0</td>
+          <td id="totalKasir">₹0</td>
+          <td id="totalPayment">₹0</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Trend Graph -->
+    <div class="chart-container">
+      <h2 style="margin-top:0; text-align:center;">📈 Discount & Payment Trend</h2>
+      <canvas id="trendChart"></canvas>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background:#3b82f6;"></div><span>Discount</span></div>
+        <div class="legend-item"><div class="legend-color" style="background:#10b981;"></div><span>Monthly Payment Due</span></div>
+      </div>
+    </div>
+
+    <!-- Auction Insights -->
+    <div class="insights-container">
+      <h2 style="margin-top:0; text-align:center;">🏆 Best Months to Bid & Acquire Chit</h2>
+      <p style="text-align:center; margin-bottom:20px; color:#64748b;">
+        Lowest Monthly Payment = Best time to enter auction
+      </p>
+      <div class="insights-list" id="insightsList"></div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary">
+      <div class="card"><strong>Total Discount</strong><h2 id="sumDiscount">₹0</h2></div>
+      <div class="card"><strong>Total Kasir</strong><h2 id="sumKasir">₹0</h2></div>
+      <div class="card"><strong>Total Dividend</strong><h2 id="sumDividend">₹0</h2></div>
+      <div class="card"><strong>Overall Interest</strong><h2 id="interestRate">0%</h2></div>
+      <div class="card"><strong>Total Collection</strong><h2 id="sumCollection">₹0</h2></div>
+      <div class="card"><strong>Avg Monthly Payment</strong><h2 id="avgPayment">₹0</h2></div>
+    </div>
+
+    <div class="actions">
+      <button onclick="copyToClipboard()" class="btn">📋 Copy</button>
+      <button onclick="downloadCSV()" class="btn">📥 CSV</button>
+      <button onclick="downloadPDF()" class="btn">📄 PDF</button>
+      <button onclick="printTable()" class="btn">🖨️ Print</button>
+      <button onclick="saveScenario()" class="btn btn-secondary">💾 Save</button>
+      <button onclick="loadScenarios()" class="btn btn-secondary">📂 Load</button>
+    </div>
+  </div>
+
+  <script>
+    let data = [];
+    let isDark = false;
+    let chartCtx;
+
+    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+    function formatINR(amount) {
+      return '₹' + Number(amount).toLocaleString('en-IN');
+    }
+
+    function getInstallmentMonth(monthIndex, year) {
+      const m = monthIndex % 12;
+      const y = year + Math.floor(monthIndex / 12);
+      return `${monthNames[m]} ${y}`;
+    }
+
+    function toggleTheme() {
+      isDark = !isDark;
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      localStorage.setItem('chitTheme', isDark ? 'dark' : 'light');
+      calculate();
+    }
+
+    function toggleKasirMode() {
+      document.getElementById('percentContainer').style.display = 
+        document.getElementById('kasirType').value === 'percent' ? 'block' : 'none';
+      calculate();
+    }
+
+    function generateAutoDiscount() {
+      const months = parseInt(document.getElementById('totalMonths').value) || 20;
+      const chitAmount = parseFloat(document.getElementById('chitAmount').value) || 500000;
+      const maxDiscount = Math.floor(chitAmount * 0.25);
+      for (let i = 0; i < months; i++) {
+        if (data[i]) data[i].discount = Math.round(maxDiscount * (months - i) / months);
+      }
+      calculate();
+    }
+
+    function resetAll() {
+      if (!confirm("Reset all fields?")) return;
+      document.getElementById('chitAmount').value = 500000;
+      document.getElementById('totalMonths').value = 20;
+      document.getElementById('startMonth').value = 4; // May
+      document.getElementById('startYear').value = 2026;
+      document.getElementById('kasirPercent').value = 5;
+      document.getElementById('schemeName').value = "My Chit Fund - May 2026";
+      data = [];
+      calculate();
+    }
+
+    function calculate() {
+      const chitAmount = parseFloat(document.getElementById('chitAmount').value) || 500000;
+      const months = parseInt(document.getElementById('totalMonths').value) || 20;
+      const startMonth = parseInt(document.getElementById('startMonth').value);
+      const startYear = parseInt(document.getElementById('startYear').value) || 2026;
+      const kasirType = document.getElementById('kasirType').value;
+      const kasirPercent = parseFloat(document.getElementById('kasirPercent').value) || 5;
+
+      if (data.length !== months) {
+        data = Array.from({ length: months }, (_, i) => ({
+          month: i + 1,
+          discount: Math.round(chitAmount * 0.15 * (months - i) / months),
+          kasir: 0
+        }));
+      }
+
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      let totalDiscount = 0, totalKasir = 0, totalPayment = 0, totalDividend = 0;
+      const baseInstallment = chitAmount / months;
+      const payments = [];
+
+      for (let i = 0; i < months; i++) {
+        const row = data[i];
+        let kasir = (kasirType === 'percent') 
+          ? Math.round(row.discount * kasirPercent / 100) 
+          : (row.kasir || 0);
+
+        const dividend = row.discount - kasir;
+        const perMemberBenefit = dividend / months;
+        const monthlyPayment = Math.round(baseInstallment - perMemberBenefit);
+
+        row.kasir = kasir;
+        payments.push(monthlyPayment);
+
+        totalDiscount += row.discount;
+        totalKasir += kasir;
+        totalDividend += dividend;
+        totalPayment += monthlyPayment;
+
+        const installmentDate = getInstallmentMonth(startMonth + i, startYear);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row.month}</td>
+          <td style="text-align:left; font-weight:500;">${installmentDate}</td>
+          <td>${formatINR(chitAmount)}</td>
+          <td contenteditable="true" onblur="updateDiscount(\( {i}, this.innerText)"> \){row.discount}</td>
+          <td contenteditable="true" onblur="updateKasir(\( {i}, this.innerText)"> \){kasir}</td>
+          <td>${formatINR(monthlyPayment)}</td>
+        `;
+
+        if (i === 0) tr.classList.add('highlight-high');
+        if (i === months - 1) tr.classList.add('highlight-low');
+        tbody.appendChild(tr);
+      }
+
+      // Update totals
+      document.getElementById('totalDiscount').textContent = formatINR(totalDiscount);
+      document.getElementById('totalKasir').textContent = formatINR(totalKasir);
+      document.getElementById('totalPayment').textContent = formatINR(totalPayment);
+
+      document.getElementById('sumDiscount').textContent = formatINR(totalDiscount);
+      document.getElementById('sumKasir').textContent = formatINR(totalKasir);
+      document.getElementById('sumDividend').textContent = formatINR(totalDividend);
+      document.getElementById('sumCollection').textContent = formatINR(totalPayment * months);
+      document.getElementById('avgPayment').textContent = formatINR(Math.round(totalPayment));
+
+      const interestRate = totalPayment * months > 0 ? 
+        Math.round((totalDividend / (totalPayment * months)) * 100) : 0;
+      document.getElementById('interestRate').textContent = interestRate + '%';
+
+      drawTrendChart(payments, data.map(r => r.discount));
+      showAuctionInsights(payments);
+    }
+
+    function updateDiscount(index, value) {
+      data[index].discount = parseFloat(value) || 0;
+      calculate();
+    }
+
+    function updateKasir(index, value) {
+      data[index].kasir = parseFloat(value) || 0;
+      calculate();
+    }
+
+    function drawTrendChart(payments, discounts) {
+      const canvas = document.getElementById('trendChart');
+      if (!chartCtx) chartCtx = canvas.getContext('2d');
+
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * (window.devicePixelRatio || 1);
+      canvas.height = 380 * (window.devicePixelRatio || 1);
+
+      const w = canvas.width, h = canvas.height;
+      const padding = 50, plotW = w - padding*2, plotH = h - padding*2;
+
+      chartCtx.clearRect(0, 0, w, h);
+      chartCtx.fillStyle = isDark ? '#1e2937' : '#ffffff';
+      chartCtx.fillRect(0, 0, w, h);
+
+      if (discounts.length === 0) return;
+
+      const maxY = Math.max(Math.max(...discounts), Math.max(...payments)) * 1.1 || 1;
+
+      // Grid
+      chartCtx.strokeStyle = isDark ? '#334155' : '#e2e8f0';
+      for (let i = 0; i <= 5; i++) {
+        const y = padding + plotH * (1 - i/5);
+        chartCtx.beginPath(); chartCtx.moveTo(padding, y); chartCtx.lineTo(w-padding, y); chartCtx.stroke();
+        const val = Math.round(maxY * i / 5);
+        chartCtx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+        chartCtx.font = '12px sans-serif';
+        chartCtx.textAlign = 'right';
+        chartCtx.fillText(formatINR(val), padding-10, y+4);
+      }
+
+      // X labels (Chit No)
+      const step = Math.max(1, Math.floor(discounts.length / 8));
+      chartCtx.textAlign = 'center';
+      for (let i = 0; i < discounts.length; i += step) {
+        const x = padding + (plotW * i) / (discounts.length - 1);
+        chartCtx.fillText((i+1).toString(), x, h - padding + 20);
+      }
+
+      // Lines & dots (same as before)
+      chartCtx.strokeStyle = '#3b82f6'; chartCtx.lineWidth = 3;
+      chartCtx.beginPath();
+      discounts.forEach((v,i) => {
+        const x = padding + (plotW * i) / (discounts.length-1);
+        const y = padding + plotH * (1 - v/maxY);
+        i===0 ? chartCtx.moveTo(x,y) : chartCtx.lineTo(x,y);
+      });
+      chartCtx.stroke();
+
+      chartCtx.strokeStyle = '#10b981';
+      chartCtx.beginPath();
+      payments.forEach((v,i) => {
+        const x = padding + (plotW * i) / (payments.length-1);
+        const y = padding + plotH * (1 - v/maxY);
+        i===0 ? chartCtx.moveTo(x,y) : chartCtx.lineTo(x,y);
+      });
+      chartCtx.stroke();
+
+      // Dots
+      chartCtx.fillStyle = '#3b82f6';
+      discounts.forEach((v,i) => {
+        const x = padding + (plotW * i) / (discounts.length-1);
+        const y = padding + plotH * (1 - v/maxY);
+        chartCtx.beginPath(); chartCtx.arc(x,y,4,0,Math.PI*2); chartCtx.fill();
+      });
+      chartCtx.fillStyle = '#10b981';
+      payments.forEach((v,i) => {
+        const x = padding + (plotW * i) / (payments.length-1);
+        const y = padding + plotH * (1 - v/maxY);
+        chartCtx.beginPath(); chartCtx.arc(x,y,4,0,Math.PI*2); chartCtx.fill();
+      });
+    }
+
+    function showAuctionInsights(payments) {
+      const container = document.getElementById('insightsList');
+      container.innerHTML = '';
+      let monthData = payments.map((p, i) => ({ 
+        no: i+1, 
+        payment: p,
+        date: getInstallmentMonth(parseInt(document.getElementById('startMonth').value) + i, 
+                                 parseInt(document.getElementById('startYear').value))
+      }));
+      monthData.sort((a,b) => a.payment - b.payment);
+
+      monthData.slice(0, 3).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'insight-card';
+        div.innerHTML = `
+          <strong>Month ${item.no} - ${item.date}</strong><br>
+          <span style="font-size:1.5rem; color:#166534;">${formatINR(item.payment)}</span><br>
+          <small>Recommended to bid here</small>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Utility functions (Copy, CSV, PDF, Save, Load) - updated with month names
+    function copyToClipboard() {
+      let text = `Scheme: ${document.getElementById('schemeName').value}\n\n`;
+      text += "Chit No\tInstallment Month\tDiscount\tKasir\tMonthly Payment\n";
+      const startM = parseInt(document.getElementById('startMonth').value);
+      const startY = parseInt(document.getElementById('startYear').value);
+      data.forEach((row, i) => {
+        const payment = Math.round((parseFloat(document.getElementById('chitAmount').value)/data.length) - ((row.discount - row.kasir)/data.length));
+        text += `\( {row.month}\t \){getInstallmentMonth(startM + i, startY)}\t\( {row.discount}\t \){row.kasir}\t${payment}\n`;
+      });
+      navigator.clipboard.writeText(text).then(() => alert("✅ Copied!"));
+    }
+
+    function downloadCSV() {
+      let csv = `Scheme,${document.getElementById('schemeName').value}\nChit No,Installment Month,Discount,Kasir,Monthly Payment Due\n`;
+      const startM = parseInt(document.getElementById('startMonth').value);
+      const startY = parseInt(document.getElementById('startYear').value);
+      data.forEach((row, i) => {
+        const payment = Math.round((parseFloat(document.getElementById('chitAmount').value)/data.length) - ((row.discount - row.kasir)/data.length));
+        csv += `\( {row.month}," \){getInstallmentMonth(startM + i, startY)}",\( {row.discount}, \){row.kasir},${payment}\n`;
+      });
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `chit-fund-${document.getElementById('schemeName').value.replace(/ /g,'_')}.csv`;
+      a.click();
+    }
+
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const scheme = document.getElementById('schemeName').value;
+      doc.setFontSize(16);
+      doc.text(scheme, 20, 30);
+
+      let y = 60;
+      data.forEach((row, i) => {
+        const payment = Math.round((parseFloat(document.getElementById('chitAmount').value)/data.length) - ((row.discount - row.kasir)/data.length));
+        const date = getInstallmentMonth(parseInt(document.getElementById('startMonth').value) + i, 
+                                        parseInt(document.getElementById('startYear').value));
+        doc.text(`${row.month} - ${date}`, 20, y);
+        doc.text(`Discount: ${row.discount}   Kasir: ${row.kasir}   Due: ${payment}`, 20, y+15);
+        y += 25;
+        if (y > 270) { doc.addPage(); y = 30; }
+      });
+      doc.save(`${scheme.replace(/ /g,'_')}_Schedule.pdf`);
+    }
+
+    function printTable() { window.print(); }
+
+    function saveScenario() {
+      const name = prompt("Scenario name:");
+      if (!name) return;
+      const scenarios = JSON.parse(localStorage.getItem('chitScenarios') || '{}');
+      scenarios[name] = {
+        schemeName: document.getElementById('schemeName').value,
+        chitAmount: document.getElementById('chitAmount').value,
+        totalMonths: document.getElementById('totalMonths').value,
+        startMonth: document.getElementById('startMonth').value,
+        startYear: document.getElementById('startYear').value,
+        kasirPercent: document.getElementById('kasirPercent').value,
+        data: JSON.parse(JSON.stringify(data))
+      };
+      localStorage.setItem('chitScenarios', JSON.stringify(scenarios));
+      alert(`Saved "${name}"`);
+    }
+
+    function loadScenarios() {
+      const scenarios = JSON.parse(localStorage.getItem('chitScenarios') || '{}');
+      if (Object.keys(scenarios).length === 0) return alert("No saved scenarios.");
+      const name = prompt(`Saved:\n${Object.keys(scenarios).join("\n")}\n\nLoad which?`);
+      if (scenarios[name]) {
+        const s = scenarios[name];
+        document.getElementById('schemeName').value = s.schemeName || "";
+        document.getElementById('chitAmount').value = s.chitAmount;
+        document.getElementById('totalMonths').value = s.totalMonths;
+        document.getElementById('startMonth').value = s.startMonth || 4;
+        document.getElementById('startYear').value = s.startYear || 2026;
+        document.getElementById('kasirPercent').value = s.kasirPercent || 5;
+        data = s.data;
+        calculate();
+      }
+    }
+
+    window.onload = () => {
+      if (localStorage.getItem('chitTheme') === 'dark') {
+        isDark = true;
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      calculate();
+    };
+
+    window.addEventListener('resize', () => calculate());
+  </script>
+</body>
+</html>

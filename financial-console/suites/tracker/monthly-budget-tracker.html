@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monthly Planner | Planners Suite</title>
+  <style>
+    :root {
+      --primary: #2563eb; --primary-hover: #1d4ed8;
+      --bg: #f8f9fa; --surface: #ffffff;
+      --text: #111827; --text-muted: #6b7280;
+      --border: #e5e7eb; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+      --radius: 8px; --shadow: 0 2px 8px rgba(0,0,0,0.06);
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --spacing: 1.25rem;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container { max-width: 1024px; margin: 0 auto; padding: var(--spacing); }
+
+    /* Header & Nav */
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 0; }
+    .brand { font-size: 1.25rem; font-weight: 700; color: var(--text); }
+    .tagline { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .nav-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted); }
+    .nav-tags span { opacity: 0.6; }
+
+    /* Breadcrumbs */
+    .breadcrumbs { display: flex; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); margin: 1.25rem 0; flex-wrap: wrap; }
+    .breadcrumbs a { color: var(--text-muted); }
+    .breadcrumbs a:hover { color: var(--primary); }
+    .breadcrumbs .sep { opacity: 0.5; }
+
+    /* Page Header */
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    .page-header p { color: var(--text-muted); }
+    .back-link { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.75rem; font-size: 0.9rem; font-weight: 500; }
+
+    /* Cards */
+    .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border); }
+    .card h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+    .card h3 { font-size: 1rem; margin: 1rem 0 0.5rem; }
+
+    /* Forms & Inputs */
+    .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); }
+    input, select, textarea { padding: 0.55rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.95rem; background: #fafafa; }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); border-color: var(--primary); background: #fff; }
+
+    .tab-nav { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .tab-btn { padding: 0.5rem 0.75rem; background: transparent; border: 1px solid transparent; border-radius: var(--radius); cursor: pointer; font-weight: 500; color: var(--text-muted); }
+    .tab-btn:hover { background: #f3f4f6; }
+    .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .input-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 0.5rem; }
+    .input-table th, .input-table td { padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .input-table th { font-weight: 500; color: var(--text-muted); background: #fafafa; }
+    .input-table input { width: 100%; padding: 0.4rem; border: 1px solid var(--border); border-radius: 4px; }
+    .btn-remove { background: var(--danger); color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-weight: 500; }
+    .btn-add { background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--radius); cursor: pointer; margin-top: 0.75rem; font-weight: 500; }
+
+    /* Action Buttons */
+    .action-bar { display: flex; gap: 0.75rem; margin: 1.5rem 0; flex-wrap: wrap; }
+    .btn { padding: 0.65rem 1.25rem; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-outline:hover { background: var(--bg); }
+
+    /* Results Grid */
+    .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: #f8fafc; padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border); text-align: center; }
+    .stat-card h3 { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+    .stat-card.success .value { color: var(--success); }
+    .stat-card.danger .value { color: var(--danger); }
+
+    /* Tables */
+    .statement-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 1rem; background: var(--surface); }
+    .statement-table th { background: #f1f5f9; position: sticky; top: 0; font-weight: 500; color: var(--text-muted); text-align: left; }
+    .statement-table td, .statement-table th { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--border); }
+    .statement-table .credit { color: var(--success); font-weight: 500; }
+    .statement-table .debit { color: var(--danger); font-weight: 500; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+
+    .balance-sheet { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+    .bs-section { padding: 1rem; background: #fafafa; border-radius: var(--radius); border: 1px solid var(--border); }
+    .bs-section ul { padding-left: 1.25rem; margin: 0.5rem 0; font-size: 0.9rem; }
+    .bs-section li { margin-bottom: 0.35rem; }
+    .bs-total { margin-top: 0.5rem; font-weight: 600; font-size: 0.95rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); }
+
+    /* Export/Import */
+    .export-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .import-zone { margin-top: 1rem; padding: 1rem; background: #f8fafc; border: 1px dashed var(--border); border-radius: var(--radius); text-align: center; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; }
+    .import-zone:hover { background: #f1f5f9; }
+    #import-preview { margin-top: 1rem; background: #fafafa; border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius); max-height: 250px; overflow-y: auto; font-size: 0.8rem; }
+    #import-preview table { width: 100%; }
+    #import-preview th { background: #f1f5f9; }
+
+    /* Info Section */
+    .info-card ul { padding-left: 1.25rem; margin-top: 0.5rem; }
+    .info-card li { margin-bottom: 0.5rem; color: var(--text-muted); }
+    .formula-box { background: #f8fafc; border: 1px solid var(--border); padding: 0.75rem; border-radius: var(--radius); font-family: monospace; margin: 0.5rem 0; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; background: #fee2e2; color: var(--danger); border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem; }
+    .badge.success { background: #d1fae5; color: var(--success); }
+
+    .hidden { display: none !important; }
+
+    /* Print Optimization */
+    @media print {
+      body { background: white; -webkit-print-color-adjust: exact; }
+      header, .breadcrumbs, .controls-card, .input-card, .action-bar, .export-import-card, .tab-nav, .btn-add, .btn-remove, footer { display: none !important; }
+      .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; padding: 0.75rem; margin-bottom: 0.75rem; }
+      .container { max-width: 100%; padding: 0; }
+      .statement-table th { background: #eee !important; }
+    }
+
+    @media (max-width: 640px) {
+      .balance-sheet { grid-template-columns: 1fr; }
+      .controls-grid { grid-template-columns: 1fr; }
+      .results-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="brand">Finance Console</div>
+      <div class="tagline">Financial Tools & Personal Wealth Calculators</div>
+      <div class="nav-tags">Wealth Planning <span>·</span> Budgeting <span>·</span> Cash Flow <span>·</span> Tracking</div>
+    </div>
+  </header>
+
+  <div class="container">
+    <nav class="breadcrumbs">
+      <a href="#">Home</a><span class="sep">/</span>
+      <a href="#">Financial Calculators</a><span class="sep">/</span>
+      <a href="#">Planners</a><span class="sep">/</span>
+      <strong>Monthly Planner</strong>
+    </nav>
+
+    <section class="page-header">
+      <h1>Monthly Financial Planner</h1>
+      <p>Track, allocate, and export your monthly cash flow with professional statement formatting. 100% browser-based & private.</p>
+      <a href="#" class="back-link">← Back to Planners</a>
+    </section>
+
+    <section class="card controls-card">
+      <h2>Planner Settings</h2>
+      <div class="controls-grid">
+        <div class="form-group">
+          <label for="planner-month">Month & Year</label>
+          <input type="month" id="planner-month">
+        </div>
+        <div class="form-group">
+          <label for="currency-select">Currency</label>
+          <select id="currency-select">
+            <option value="₹">₹ INR</option>
+            <option value="$">$ USD</option>
+            <option value="€">€ EUR</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="preset-select">Template Preset</label>
+          <select id="preset-select">
+            <option value="blank">Blank Planner</option>
+            <option value="salary">Salaried Professional</option>
+            <option value="freelance">Freelancer / Creator</option>
+            <option value="business">Small Business</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="card input-card">
+      <h2>Transaction Input</h2>
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="income">Income</button>
+        <button class="tab-btn" data-tab="fixed">Fixed Expenses</button>
+        <button class="tab-btn" data-tab="variable">Variable Expenses</button>
+        <button class="tab-btn" data-tab="savings">Savings & Investments</button>
+        <button class="tab-btn" data-tab="debt">Debt Repayments</button>
+        <button class="tab-btn" data-tab="onetime">One-Time</button>
+      </div>
+      <div id="input-container"></div>
+      <button class="btn-add" id="add-row-btn">+ Add Entry</button>
+    </section>
+
+    <div class="action-bar">
+      <button class="btn btn-primary" id="calculate-btn">Generate Plan</button>
+      <button class="btn btn-outline" id="reset-btn">Reset All</button>
+    </div>
+
+    <section id="results-section" class="card results-card hidden">
+      <h2>Monthly Summary & Statements</h2>
+      <div class="results-grid">
+        <div class="stat-card"><h3>Total Income</h3><div class="value" id="total-income">0</div></div>
+        <div class="stat-card"><h3>Total Expenses</h3><div class="value" id="total-expenses">0</div></div>
+        <div class="stat-card"><h3>Net Savings</h3><div class="value" id="net-savings">0</div></div>
+        <div class="stat-card"><h3>Savings Rate</h3><div class="value" id="savings-rate">0%</div></div>
+      </div>
+
+      <h3>Bank Statement View</h3>
+      <div class="table-wrap">
+        <table class="statement-table">
+          <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Credit</th><th>Debit</th><th>Balance</th></tr></thead>
+          <tbody id="statement-body"></tbody>
+        </table>
+      </div>
+
+      <div class="balance-sheet">
+        <div class="bs-section">
+          <h4>Assets</h4>
+          <ul id="assets-list"></ul>
+          <div class="bs-total">Total Assets: <span id="total-assets">0</span></div>
+        </div>
+        <div class="bs-section">
+          <h4>Liabilities & Net Worth</h4>
+          <ul id="liabilities-list"></ul>
+          <div class="bs-total">Net Worth: <span id="net-worth">0</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card export-import-card">
+      <h2>Export & Import</h2>
+      <div class="export-bar">
+        <button class="btn export-btn" id="wa-btn">📱 WhatsApp Summary</button>
+        <button class="btn export-btn" id="pdf-btn">📄 Download PDF</button>
+        <button class="btn export-btn" id="csv-btn">📊 Export CSV</button>
+        <button class="btn export-btn" id="template-btn">⬇️ Sample Template</button>
+      </div>
+      <div class="import-zone" id="import-trigger">
+        📁 Click to Import CSV or drag & drop file here
+        <input type="file" id="csv-import" accept=".csv" style="display:none;">
+      </div>
+      <div id="import-preview" class="hidden">
+        <p style="margin-bottom:0.5rem; font-weight:500;">Import Preview: <span id="preview-count">0</span> rows detected</p>
+        <table><thead><tr><th>Type</th><th>Category</th><th>Amount</th><th>Date</th></tr></thead><tbody id="preview-body"></tbody></table>
+        <div style="margin-top:0.75rem; display:flex; gap:0.5rem; justify-content:flex-end;">
+          <button class="btn btn-outline" id="cancel-import">Cancel</button>
+          <button class="btn btn-primary" id="apply-import">✅ Apply to Planner</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card info-card">
+      <h2>About Monthly Planning</h2>
+      <p style="color:var(--text-muted); margin-bottom:0.75rem;">A comprehensive cash flow planner helps you allocate every unit of currency to income, expenses, savings, and debt. This tool generates professional-grade statements for tracking and reporting.</p>
+      
+      <h3>Planning Framework</h3>
+      <div class="formula-box">Net Cash Flow = Total Income − (Fixed + Variable + Debt + One-Time Expenses)</div>
+      <p style="color:var(--text-muted); margin-bottom:0.5rem;">Allocate remaining balance to Savings/Investments to maintain a zero-based budget.</p>
+      
+      <h3>Key Concepts</h3>
+      <ul>
+        <li><strong>50/30/20 Rule:</strong> 50% Needs, 30% Wants, 20% Savings/Debt</li>
+        <li><strong>Emergency Fund:</strong> 3–6 months of essential expenses in liquid form</li>
+        <li><strong>Zero-Based Budgeting:</strong> Income − Expenses = 0 (every unit assigned)</li>
+      </ul>
+
+      <h3>Tips</h3>
+      <ul>
+        <li>Review and adjust variable expenses weekly</li>
+        <li>Automate savings & SIPs on payday</li>
+        <li>Use CSV export for reconciliation in accounting software</li>
+      </ul>
+      <p style="margin-top:1rem; font-size:0.85rem; color:var(--success); font-weight:500;">🔒 Privacy Notice: All data stays in your browser. No server calls. No tracking. 100% Client-Side.</p>
+    </section>
+  </div>
+
+  <footer style="text-align:center; padding:1.5rem; color:var(--text-muted); font-size:0.8rem; border-top:1px solid var(--border); margin-top:2rem;">
+    © 2026 Finance Console. 100% Client-Side. No Server Calls. Built for Financial Clarity.
+  </footer>
+
+  <script>
+    // State Management
+    const state = {
+      transactions: [],
+      currency: '₹',
+      month: '',
+      pendingImport: null
+    };
+
+    // DOM References
+    const els = {
+      month: document.getElementById('planner-month'),
+      currency: document.getElementById('currency-select'),
+      preset: document.getElementById('preset-select'),
+      inputContainer: document.getElementById('input-container'),
+      addBtn: document.getElementById('add-row-btn'),
+      calcBtn: document.getElementById('calculate-btn'),
+      resetBtn: document.getElementById('reset-btn'),
+      results: document.getElementById('results-section'),
+      statementBody: document.getElementById('statement-body'),
+      tabs: document.querySelectorAll('.tab-btn'),
+      waBtn: document.getElementById('wa-btn'),
+      pdfBtn: document.getElementById('pdf-btn'),
+      csvBtn: document.getElementById('csv-btn'),
+      templateBtn: document.getElementById('template-btn'),
+      importTrigger: document.getElementById('import-trigger'),
+      csvImport: document.getElementById('csv-import'),
+      importPreview: document.getElementById('import-preview'),
+      previewBody: document.getElementById('preview-body'),
+      previewCount: document.getElementById('preview-count'),
+      applyImport: document.getElementById('apply-import'),
+      cancelImport: document.getElementById('cancel-import'),
+      totalIncome: document.getElementById('total-income'),
+      totalExpenses: document.getElementById('total-expenses'),
+      netSavings: document.getElementById('net-savings'),
+      savingsRate: document.getElementById('savings-rate'),
+      assetsList: document.getElementById('assets-list'),
+      liabilitiesList: document.getElementById('liabilities-list'),
+      totalAssets: document.getElementById('total-assets'),
+      netWorth: document.getElementById('net-worth')
+    };
+
+    // Presets
+    const presets = {
+      blank: [],
+      salary: [
+        {type:'income',cat:'Salary',desc:'Primary Employment',amount:75000,date:''},
+        {type:'fixed',cat:'Housing',desc:'Apartment Rent',amount:25000,date:''},
+        {type:'fixed',cat:'Utilities',desc:'Electricity & Internet',amount:4500,date:''},
+        {type:'variable',cat:'Groceries',desc:'Weekly Market',amount:8000,date:''},
+        {type:'savings',cat:'Investment',desc:'Mutual Fund SIP',amount:15000,date:''},
+        {type:'debt',cat:'Credit Card',desc:'Minimum Due',amount:5000,date:''}
+      ],
+      freelance: [
+        {type:'income',cat:'Client A',desc:'Web Development',amount:40000,date:''},
+        {type:'income',cat:'Client B',desc:'Content Writing',amount:15000,date:''},
+        {type:'variable',cat:'Software',desc:'Adobe/Cloud Tools',amount:3500,date:''},
+        {type:'variable',cat:'Co-working',desc:'Shared Desk',amount:6000,date:''},
+        {type:'savings',cat:'Emergency',desc:'High Yield Savings',amount:10000,date:''},
+        {type:'debt',cat:'Laptop EMI',desc:'MacBook Pro',amount:12000,date:''}
+      ],
+      business: [
+        {type:'income',cat:'Sales',desc:'Product Revenue',amount:120000,date:''},
+        {type:'fixed',cat:'Rent',desc:'Office Space',amount:25000,date:''},
+        {type:'fixed',cat:'Staff',desc:'Payroll',amount:45000,date:''},
+        {type:'variable',cat:'Inventory',desc:'Raw Materials',amount:30000,date:''},
+        {type:'savings',cat:'Reserve',desc:'Tax & Expansion Fund',amount:20000,date:''}
+      ]
+    };
+
+    let activeTab = 'income';
+    const fmt = (val) => `${state.currency}${Number(val).toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+
+    // Initialize
+    const init = () => {
+      const now = new Date();
+      els.month.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      switchTab('income');
+      loadPreset();
+    };
+
+    // Tab Logic
+    const switchTab = (tab) => {
+      activeTab = tab;
+      els.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      renderInputTable();
+    };
+
+    // Render Input Table
+    const renderInputTable = () => {
+      const rows = state.transactions.filter(t => t.type === activeTab);
+      els.inputContainer.innerHTML = `
+        <table class="input-table">
+          <thead><tr><th style="width:35%">Description</th><th style="width:20%">Category</th><th style="width:25%">Amount</th><th style="width:15%">Date</th><th style="width:5%">Action</th></tr></thead>
+          <tbody id="rows-body"></tbody>
+        </table>
+      `;
+      const tbody = document.getElementById('rows-body');
+      rows.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><input type="text" data-id="${activeTab}-${i}" data-field="desc" value="${r.desc}" placeholder="e.g., Rent, Salary"></td>
+          <td><input type="text" data-id="${activeTab}-${i}" data-field="cat" value="${r.cat}" placeholder="e.g., Housing"></td>
+          <td><input type="number" data-id="${activeTab}-${i}" data-field="amount" value="${r.amount}" min="0" step="100"></td>
+          <td><input type="date" data-id="${activeTab}-${i}" data-field="date" value="${r.date}"></td>
+          <td><button class="btn-remove" onclick="removeRow('${activeTab}', ${i})">×</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:1.5rem;">No entries. Click "+ Add Entry" to begin.</td></tr>`;
+      }
+      attachInputListeners();
+    };
+
+    // Input Sync
+    const attachInputListeners = () => {
+      document.querySelectorAll('#rows-body input').forEach(inp => {
+        inp.addEventListener('input', (e) => {
+          const [type, idx] = e.target.dataset.id.split('-');
+          const field = e.target.dataset.field;
+          const arr = state.transactions.filter(t => t.type === type);
+          if (arr[idx]) arr[idx][field] = e.target.value;
+        });
+      });
+    };
+
+    // Add/Remove Rows
+    window.removeRow = (type, idx) => {
+      const arr = state.transactions.filter(t => t.type === type);
+      state.transactions.splice(state.transactions.indexOf(arr[idx]), 1);
+      renderInputTable();
+    };
+
+    els.addBtn.addEventListener('click', () => {
+      state.transactions.push({type: activeTab, cat: '', desc: '', amount: '', date: ''});
+      renderInputTable();
+    });
+
+    // Preset Handler
+    const loadPreset = () => {
+      state.transactions = [...presets[els.preset.value]];
+      renderInputTable();
+    };
+    els.preset.addEventListener('change', loadPreset);
+
+    // Calculate
+    els.calcBtn.addEventListener('click', () => {
+      if (state.transactions.length === 0) return alert('Please add at least one transaction.');
+      state.month = els.month.value;
+      state.currency = els.currency.value;
+      
+      const sorted = [...state.transactions].sort((a,b) => (a.date || '9999') > (b.date || '0000') ? 1 : -1);
+      let balance = 0;
+      let stmtHtml = '';
+      let totalIn = 0, totalOut = 0, totalSave = 0, totalDebt = 0;
+
+      sorted.forEach(t => {
+        const amt = Number(t.amount) || 0;
+        const date = t.date || state.month ? `${state.month}-01` : '';
+        let credit = '', debit = '';
+        
+        if (t.type === 'income') {
+          balance += amt; credit = fmt(amt); totalIn += amt;
+        } else if (t.type === 'savings') {
+          balance -= amt; debit = fmt(amt); totalSave += amt; // Tracked separately
+        } else {
+          balance -= amt; debit = fmt(amt); totalOut += amt;
+          if (t.type === 'debt') totalDebt += amt;
+        }
+        stmtHtml += `<tr><td>${date}</td><td>${t.desc}</td><td>${t.cat}</td><td class="credit">${credit}</td><td class="debit">${debit}</td><td><strong>${fmt(balance)}</strong></td></tr>`;
+      });
+
+      els.statementBody.innerHTML = stmtHtml || '<tr><td colspan="6" style="text-align:center;">No data</td></tr>';
+      els.totalIncome.textContent = fmt(totalIn);
+      els.totalExpenses.textContent = fmt(totalOut);
+      els.netSavings.textContent = fmt(totalIn - totalOut);
+      els.savingsRate.textContent = totalIn > 0 ? `${Math.round(((totalIn - totalOut)/totalIn)*100)}%` : '0%';
+      
+      // Balance Sheet Mock
+      els.assetsList.innerHTML = `<li>Cash/Equivalents: ${fmt(Math.max(0, totalIn - totalOut))}</li><li>Investments: ${fmt(totalSave)}</li>`;
+      els.totalAssets.textContent = fmt(totalIn - totalOut + totalSave);
+      els.liabilitiesList.innerHTML = `<li>Outstanding Debt: ${fmt(totalDebt)}</li><li>Payables: ${fmt(0)}</li>`;
+      els.netWorth.textContent = fmt((totalIn - totalOut + totalSave) - totalDebt);
+
+      els.results.classList.remove('hidden');
+      els.results.scrollIntoView({behavior:'smooth'});
+    });
+
+    // Reset
+    els.resetBtn.addEventListener('click', () => {
+      if(confirm('Clear all entries and results?')) {
+        state.transactions = [];
+        renderInputTable();
+        els.results.classList.add('hidden');
+      }
+    });
+
+    // Tab Switching
+    els.tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+    // WhatsApp Export
+    els.waBtn.addEventListener('click', () => {
+      if (!els.results.classList.contains('hidden')) {
+        const txt = `📊 Monthly Planner Summary\n🗓️ ${els.month.value}\n💰 Income: ${els.totalIncome.textContent}\n📉 Expenses: ${els.totalExpenses.textContent}\n💵 Net Savings: ${els.netSavings.textContent}\n📈 Rate: ${els.savingsRate.textContent}\nGenerated: ${new Date().toLocaleString()}`;
+        navigator.clipboard.writeText(txt).then(() => {
+          alert('Summary copied! Opening WhatsApp...');
+          window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
+        });
+      } else alert('Generate the plan first.');
+    });
+
+    // PDF Export
+    els.pdfBtn.addEventListener('click', () => {
+      if (els.results.classList.contains('hidden')) return alert('Generate the plan first.');
+      window.print();
+    });
+
+    // CSV Export
+    els.csvBtn.addEventListener('click', () => {
+      if (state.transactions.length === 0) return alert('No data to export.');
+      const csv = ['Type,Category,Description,Amount,Date'];
+      state.transactions.forEach(t => csv.push(`${t.type},"${t.cat}","${t.desc}",${t.amount},${t.date || state.month}`));
+      const blob = new Blob([csv.join('\n')], {type:'text/csv'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `planner_${els.month.value || 'export'}.csv`; a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    // Template Download
+    els.templateBtn.addEventListener('click', () => {
+      const csv = `Type,Category,Description,Amount,Date,Frequency,Notes
+Income,Salary,Primary Employment,75000,${els.month.value || '2026-04-01'},Monthly,
+Expense,Housing,Apartment Rent,25000,${els.month.value || '2026-04-01'},Monthly,
+Expense,Utilities,Electricity & Internet,4500,${els.month.value || '2026-04-01'},Monthly,
+Savings,Investment,Mutual Fund SIP,15000,${els.month.value || '2026-04-01'},Monthly,
+OneTime,Travel,Weekend Trip,12000,${els.month.value || '2026-04-15'},One-time,`;
+      const blob = new Blob([csv], {type:'text/csv'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'monthly_planner_template.csv'; a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    // CSV Import Flow
+    els.importTrigger.addEventListener('click', () => els.csvImport.click());
+    els.csvImport.addEventListener('change', (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target.result;
+        const lines = text.split('\n').filter(l => l.trim());
+        const data = lines.slice(1).map(l => {
+          const vals = l.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || l.split(',');
+          return {
+            type: (vals[0] || 'variable').toLowerCase(),
+            cat: vals[1]?.replace(/"/g,'') || '',
+            desc: vals[2]?.replace(/"/g,'') || '',
+            amount: vals[3] || 0,
+            date: vals[4] || ''
+          };
+        }).filter(r => r.type && r.amount);
+        state.pendingImport = data;
+        els.previewCount.textContent = data.length;
+        els.previewBody.innerHTML = data.map(r => `<tr><td>${r.type}</td><td>${r.cat}</td><td>${r.desc}</td><td>${r.amount}</td><td>${r.date}</td></tr>`).join('');
+        els.importPreview.classList.remove('hidden');
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    els.applyImport.addEventListener('click', () => {
+      if (state.pendingImport) {
+        state.transactions = state.pendingImport;
+        renderInputTable();
+        els.importPreview.classList.add('hidden');
+        state.pendingImport = null;
+      }
+    });
+
+    els.cancelImport.addEventListener('click', () => {
+      els.importPreview.classList.add('hidden');
+      state.pendingImport = null;
+    });
+
+    // Init
+    init();
+  </script>
+</body>
+</html>

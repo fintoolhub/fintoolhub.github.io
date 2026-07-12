@@ -1,749 +1,1436 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Cash Tracker | destiny-tracer</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FinConsole — Smart Expense Tracker</title>
+<style>
+  :root {
+  --bg: #f6f8fb;
+  --surface: #ffffff;
+  --surface-2: #f1f4f9;
+  --border: #e4e8ef;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.04);
+  --shadow: 0 4px 12px rgba(15,23,42,.06);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --surface: #121a2b;
+  --surface-2: #1a2338;
+  --border: #243049;
+  --text: #e5e7eb;
+  --text-muted: #94a3b8;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+  --shadow: 0 4px 12px rgba(0,0,0,.4);
+}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
-        }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+input, select, textarea, button { font-family: inherit; font-size: inherit; color: inherit; }
+a { color: var(--primary); text-decoration: none; }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
+/* Layout */
+.app { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 240px; background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; padding: 20px 14px;
+  position: sticky; top: 0; height: 100vh;
+}
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 20px; font-weight: 700; font-size: 18px; color: var(--primary); }
+.brand svg { width: 24px; height: 24px; }
+.nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  border-radius: var(--radius-sm); color: var(--text-muted);
+  transition: all .15s ease; font-weight: 500;
+}
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item.active { background: var(--primary); color: #fff; }
+.nav-item svg { width: 18px; height: 18px; }
+.sidebar-footer { padding-top: 14px; border-top: 1px solid var(--border); }
+.theme-toggle { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; border-radius: var(--radius-sm); color: var(--text-muted); }
+.theme-toggle:hover { background: var(--surface-2); color: var(--text); }
 
-        header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-        }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; background: var(--surface); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10; gap: 16px;
+}
+.topbar h1 { font-size: 18px; font-weight: 600; }
+.topbar-left, .topbar-right { display: flex; align-items: center; gap: 12px; }
+.date-range { display: flex; align-items: center; gap: 8px; }
+.date-range input { padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+#menuToggle { display: none; }
 
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
+/* Views */
+.view { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.view.hidden { display: none; }
 
-        header p {
-            font-size: 1.1em;
-            opacity: 0.95;
-        }
+/* Cards */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+.card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+.card-header h3 { font-size: 15px; font-weight: 600; }
+.hint { color: var(--text-muted); font-size: 13px; }
 
-        .back-link {
-            display: inline-block;
-            color: white;
-            text-decoration: none;
-            margin-bottom: 20px;
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 6px;
-            transition: all 0.3s;
-        }
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+.stat-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.stat-card.income::before { background: var(--success); }
+.stat-card.expense::before { background: var(--danger); }
+.stat-card.balance::before { background: var(--primary); }
+.stat-card.count::before { background: var(--warning); }
+.stat-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+.stat-value { font-size: 26px; font-weight: 700; margin-top: 6px; }
+.stat-trend { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
-        .back-link:hover {
-            background: rgba(255,255,255,0.3);
-        }
+/* Charts */
+.charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+.chart-card { padding: 20px; }
+.chart-card canvas { max-height: 280px; }
 
-        .date-selector {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-            text-align: center;
-        }
+/* Tables */
+.table-wrap { overflow-x: auto; }
+.pro-table { width: 100%; border-collapse: collapse; }
+.pro-table th, .pro-table td { padding: 12px 20px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+.pro-table th { background: var(--surface-2); font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
+.pro-table th.sortable { cursor: pointer; user-select: none; }
+.pro-table th.sortable:hover { color: var(--text); }
+.pro-table th svg { width: 12px; height: 12px; vertical-align: middle; margin-left: 4px; }
+.pro-table tr:hover td { background: var(--surface-2); }
+.pro-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.pro-table .amount-in { color: var(--success); font-weight: 600; }
+.pro-table .amount-out { color: var(--danger); font-weight: 600; }
+.pro-table .cat-badge { display: inline-block; padding: 3px 10px; background: var(--surface-2); border-radius: 999px; font-size: 11px; font-weight: 600; color: var(--text-muted); }
 
-        .date-selector input[type="date"] {
-            padding: 12px;
-            font-size: 1.1em;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            font-weight: 600;
-        }
+/* Forms */
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 20px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+.form-group input, .form-group select, .form-group textarea {
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); transition: border-color .15s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; }
 
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+/* Smart input */
+.smart-entry { padding: 20px; }
+.smart-input-wrap {
+  display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+  border: 2px solid var(--border); border-radius: var(--radius); background: var(--surface);
+  transition: all .2s;
+}
+.smart-input-wrap:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,.1); }
+.smart-icon { color: var(--primary); }
+.smart-input-wrap input { flex: 1; border: none; background: transparent; outline: none; font-size: 16px; }
+.smart-input-wrap kbd { padding: 2px 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; font-size: 11px; color: var(--text-muted); }
+.parse-preview { margin-top: 14px; padding: 14px; background: var(--surface-2); border-radius: var(--radius-sm); display: none; }
+.parse-preview.show { display: block; }
+.parse-preview .parse-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.parse-preview .parse-item { font-size: 12px; color: var(--text-muted); }
+.parse-preview .parse-item strong { display: block; color: var(--text); font-size: 14px; margin-top: 2px; }
 
-        .tab {
-            flex: 1;
-            padding: 15px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+/* Segmented control */
+.seg-control { display: flex; gap: 4px; padding: 4px; background: var(--surface-2); border-radius: var(--radius-sm); }
+.seg { flex: 1; padding: 8px; border: none; background: transparent; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; color: var(--text-muted); transition: all .15s; }
+.seg.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
 
-        .tab.active {
-            background: white;
-            color: #667eea;
-        }
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1px solid transparent; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: all .15s; font-size: 13px; }
+.btn svg { width: 16px; height: 16px; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+.btn-ghost:hover { background: var(--surface-2); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { opacity: .9; }
+.icon-btn { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: none; background: transparent; border-radius: var(--radius-sm); cursor: pointer; color: var(--text); }
+.icon-btn:hover { background: var(--surface-2); }
+.icon-btn svg { width: 18px; height: 18px; }
 
-        .tab:hover {
-            background: rgba(255,255,255,0.3);
-        }
+/* Search & filters */
+.table-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.search-box { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+.search-box svg { width: 16px; height: 16px; color: var(--text-muted); }
+.search-box input { border: none; background: transparent; outline: none; width: 200px; }
+.table-actions select { padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
 
-        .tab.active:hover {
-            background: white;
-        }
+/* Pagination */
+.pagination { display: flex; justify-content: center; gap: 4px; padding: 16px; border-top: 1px solid var(--border); }
+.pagination button { padding: 6px 12px; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius-sm); cursor: pointer; }
+.pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.pagination button:disabled { opacity: .4; cursor: not-allowed; }
 
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-            display: none;
-        }
+/* Export */
+.export-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; padding: 20px; }
+.export-btn { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; padding: 18px; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); cursor: pointer; transition: all .15s; text-align: left; }
+.export-btn:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow); }
+.export-btn svg { width: 28px; height: 28px; color: var(--primary); }
+.export-btn strong { font-size: 15px; }
+.export-btn span { font-size: 12px; color: var(--text-muted); }
 
-        .card.active {
-            display: block;
-        }
+/* Report */
+#reportContent { padding: 20px; }
+.report-section { margin-bottom: 20px; }
+.report-section h4 { font-size: 13px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 10px; }
+.report-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.report-row:last-child { border-bottom: none; font-weight: 700; }
 
-        .card h2 {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            color: #667eea;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 10px;
-        }
+/* Categories */
+.category-list { display: flex; flex-wrap: wrap; gap: 8px; padding: 20px; }
+.cat-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--surface-2); border-radius: 999px; font-size: 13px; }
+.cat-chip button { border: none; background: transparent; cursor: pointer; color: var(--text-muted); padding: 0; display: flex; }
+.cat-chip button:hover { color: var(--danger); }
+.add-category { display: flex; gap: 8px; padding: 0 20px 20px; }
+.add-category input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+.settings-actions { display: flex; gap: 10px; padding: 20px; flex-wrap: wrap; }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+/* Toast */
+.toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 1000; }
+.toast { padding: 12px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px; animation: slideIn .3s ease; min-width: 240px; }
+.toast.success { border-left: 4px solid var(--success); }
+.toast.error { border-left: 4px solid var(--danger); }
+.toast.info { border-left: 4px solid var(--primary); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #555;
-            font-size: 0.95em;
-        }
+/* Modal */
+.modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal.hidden { display: none; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
+.modal-content { position: relative; background: var(--surface); border-radius: var(--radius); width: 90%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
 
-        input[type="text"], input[type="number"], select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: all 0.3s;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .entry-item {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 12px;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .entry-desc {
-            flex: 2;
-        }
-
-        .entry-amount {
-            flex: 1;
-        }
-
-        .remove-btn {
-            padding: 8px 12px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .remove-btn:hover {
-            background: #c0392b;
-        }
-
-        .add-entry-btn {
-            width: 100%;
-            padding: 12px;
-            background: #f0f0f0;
-            color: #667eea;
-            border: 2px dashed #667eea;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 1em;
-            transition: all 0.3s;
-        }
-
-        .add-entry-btn:hover {
-            background: #e9ecef;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .summary-box {
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            color: white;
-        }
-
-        .summary-box.collection {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-
-        .summary-box.expense {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        }
-
-        .summary-box.balance {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .summary-label {
-            font-size: 0.9em;
-            opacity: 0.9;
-            margin-bottom: 8px;
-        }
-
-        .summary-amount {
-            font-size: 2em;
-            font-weight: 700;
-        }
-
-        .list-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px;
-            margin-bottom: 8px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        .list-item.collection {
-            border-left-color: #10b981;
-        }
-
-        .list-item.expense {
-            border-left-color: #ef4444;
-        }
-
-        .list-desc {
-            flex: 1;
-            font-weight: 600;
-        }
-
-        .list-amount {
-            font-weight: 700;
-            font-size: 1.1em;
-        }
-
-        .export-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-            margin-top: 10px;
-        }
-
-        .export-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .info-box {
-            background: #f0f7ff;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 6px;
-        }
-
-        .info-box h4 {
-            color: #667eea;
-            margin-bottom: 8px;
-        }
-
-        .info-box ul {
-            margin-left: 20px;
-            color: #555;
-            line-height: 1.8;
-        }
-
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 1.8em;
-            }
-
-            .summary-amount {
-                font-size: 1.5em;
-            }
-
-            .entry-item {
-                flex-direction: column;
-            }
-
-            .entry-desc, .entry-amount {
-                width: 100%;
-            }
-        }
-    </style>
+/* Responsive */
+@media (max-width: 900px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .sidebar { position: fixed; left: -260px; z-index: 100; transition: left .3s; }
+  .sidebar.open { left: 0; }
+  #menuToggle { display: inline-flex; }
+  .date-range { display: none; }
+}
+@media (max-width: 600px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .view { padding: 16px; }
+  .topbar { padding: 12px 16px; }
+  .topbar-right .btn span { display: none; }
+}
+</style>
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- jsPDF + autoTable for PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.0/jspdf.plugin.autotable.min.js"></script>
+<!-- SheetJS for Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- PapaParse for CSV -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <a href="../../index.html" class="back-link">← Back to Home</a>
-        
-        <header>
-            <h1>💰 Daily Cash Tracker</h1>
-            <p>Track your daily collections & expenses</p>
-        </header>
 
-        <div class="date-selector">
-            <label style="font-weight: 600; color: #667eea; margin-bottom: 10px; display: block;">Select Date</label>
-            <input type="date" id="selectedDate">
-        </div>
-
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('collection')">💵 Collection</button>
-            <button class="tab" onclick="switchTab('expense')">💸 Expense</button>
-            <button class="tab" onclick="switchTab('summary')">📊 Summary</button>
-        </div>
-
-        <div class="card active" id="collectionCard">
-            <h2>Cash Collection</h2>
-            
-            <div id="collectionList">
-                <div class="entry-item" data-entry-id="c1">
-                    <div class="entry-desc">
-                        <input type="text" placeholder="Description (e.g., Sales)" class="entry-desc-input">
-                    </div>
-                    <div class="entry-amount">
-                        <input type="number" placeholder="Amount (₹)" class="entry-amount-input" value="0">
-                    </div>
-                    <button class="remove-btn" onclick="removeEntry('collection', 'c1')" style="display: none;">×</button>
-                </div>
-            </div>
-
-            <button class="add-entry-btn" onclick="addEntry('collection')">+ Add Collection Entry</button>
-            <button class="export-btn" onclick="saveData()">Save & Calculate</button>
-        </div>
-
-        <div class="card" id="expenseCard">
-            <h2>Cash Expenses</h2>
-            
-            <div id="expenseList">
-                <div class="entry-item" data-entry-id="e1">
-                    <div class="entry-desc">
-                        <input type="text" placeholder="Description (e.g., Rent)" class="entry-desc-input">
-                    </div>
-                    <div class="entry-amount">
-                        <input type="number" placeholder="Amount (₹)" class="entry-amount-input" value="0">
-                    </div>
-                    <button class="remove-btn" onclick="removeEntry('expense', 'e1')" style="display: none;">×</button>
-                </div>
-            </div>
-
-            <button class="add-entry-btn" onclick="addEntry('expense')">+ Add Expense Entry</button>
-            <button class="export-btn" onclick="saveData()">Save & Calculate</button>
-        </div>
-
-        <div class="card" id="summaryCard">
-            <h2>Daily Summary</h2>
-            
-            <div class="summary-grid">
-                <div class="summary-box collection">
-                    <div class="summary-label">Total Collection</div>
-                    <div class="summary-amount" id="totalCollection">₹0</div>
-                </div>
-                <div class="summary-box expense">
-                    <div class="summary-label">Total Expense</div>
-                    <div class="summary-amount" id="totalExpense">₹0</div>
-                </div>
-                <div class="summary-box balance">
-                    <div class="summary-label">Net Balance</div>
-                    <div class="summary-amount" id="netBalance">₹0</div>
-                </div>
-            </div>
-
-            <div style="margin-top: 30px;">
-                <h3 style="color: #667eea; margin-bottom: 15px;">Collection Details</h3>
-                <div id="collectionSummaryList"></div>
-            </div>
-
-            <div style="margin-top: 30px;">
-                <h3 style="color: #667eea; margin-bottom: 15px;">Expense Details</h3>
-                <div id="expenseSummaryList"></div>
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-top: 30px;">
-                <button class="export-btn" onclick="exportPDF()" style="flex: 1;">📄 Export as PDF</button>
-                <button class="export-btn" onclick="exportCSV()" style="flex: 1;">📊 Export as CSV</button>
-            </div>
-        </div>
-
-        <div class="info-box">
-            <h4>💡 How to Use:</h4>
-            <ul>
-                <li><strong>Select Date:</strong> Choose the date for which you want to track cash</li>
-                <li><strong>Add Collection:</strong> Record all cash received (sales, payments, etc.)</li>
-                <li><strong>Add Expenses:</strong> Record all cash spent (purchases, bills, etc.)</li>
-                <li><strong>Save & Calculate:</strong> Click to save and see your daily summary</li>
-                <li><strong>View Summary:</strong> See total collection, expense, and net balance</li>
-            </ul>
-        </div>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <i data-lucide="wallet"></i>
+      <span>FinConsole</span>
     </div>
+    <nav class="nav">
+      <a href="#" data-view="dashboard" class="nav-item active">
+        <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+      </a>
+      <a href="#" data-view="add" class="nav-item">
+        <i data-lucide="plus-circle"></i><span>Add Transaction</span>
+      </a>
+      <a href="#" data-view="transactions" class="nav-item">
+        <i data-lucide="list-ordered"></i><span>Transactions</span>
+      </a>
+      <a href="#" data-view="reports" class="nav-item">
+        <i data-lucide="file-bar-chart"></i><span>Reports</span>
+      </a>
+      <a href="#" data-view="settings" class="nav-item">
+        <i data-lucide="settings"></i><span>Settings</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="theme-toggle" id="themeToggle">
+        <i data-lucide="moon"></i><span>Dark Mode</span>
+      </div>
+    </div>
+  </aside>
 
-    <script>
-        let collectionCounter = 1;
-        let expenseCounter = 1;
-        let currentData = null;
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" id="menuToggle"><i data-lucide="menu"></i></button>
+        <h1 id="viewTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="date-range">
+          <input type="date" id="dateFrom" />
+          <span>to</span>
+          <input type="date" id="dateTo" />
+          <button class="btn btn-ghost" id="applyRange">Apply</button>
+        </div>
+        <button class="btn btn-primary" id="quickAdd">
+          <i data-lucide="plus"></i><span>Quick Add</span>
+        </button>
+      </div>
+    </header>
 
-        // Set today's date by default
-        document.getElementById('selectedDate').valueAsDate = new Date();
+    <!-- Dashboard View -->
+    <section class="view" id="view-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card income">
+          <div class="stat-label">Total Income</div>
+          <div class="stat-value" id="statIncome">₹0.00</div>
+          <div class="stat-trend" id="trendIncome"></div>
+        </div>
+        <div class="stat-card expense">
+          <div class="stat-label">Total Expense</div>
+          <div class="stat-value" id="statExpense">₹0.00</div>
+          <div class="stat-trend" id="trendExpense"></div>
+        </div>
+        <div class="stat-card balance">
+          <div class="stat-label">Net Balance</div>
+          <div class="stat-value" id="statBalance">₹0.00</div>
+          <div class="stat-trend" id="trendBalance"></div>
+        </div>
+        <div class="stat-card count">
+          <div class="stat-label">Transactions</div>
+          <div class="stat-value" id="statCount">0</div>
+          <div class="stat-trend" id="trendCount"></div>
+        </div>
+      </div>
 
-        function switchTab(tab) {
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+      <div class="charts-grid">
+        <div class="card chart-card">
+          <div class="card-header">
+            <h3>Cash Flow</h3>
+            <select id="chartPeriod">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+            </select>
+          </div>
+          <canvas id="flowChart"></canvas>
+        </div>
+        <div class="card chart-card">
+          <div class="card-header"><h3>Category Breakdown</h3></div>
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
 
-            // Update cards
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-            if (tab === 'collection') {
-                document.getElementById('collectionCard').classList.add('active');
-            } else if (tab === 'expense') {
-                document.getElementById('expenseCard').classList.add('active');
-            } else if (tab === 'summary') {
-                document.getElementById('summaryCard').classList.add('active');
-                updateSummary();
-            }
-        }
+      <div class="card">
+        <div class="card-header">
+          <h3>Recent Transactions</h3>
+          <a href="#" data-view="transactions" class="link">View all →</a>
+        </div>
+        <div class="table-wrap">
+          <table class="pro-table" id="recentTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Method</th>
+                <th class="num">Debit</th>
+                <th class="num">Credit</th>
+                <th class="num">Balance</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
-        function addEntry(type) {
-            const listId = type === 'collection' ? 'collectionList' : 'expenseList';
-            const list = document.getElementById(listId);
-            
-            if (type === 'collection') {
-                collectionCounter++;
-                const entryId = 'c' + collectionCounter;
-                const newEntry = createEntryElement(type, entryId);
-                list.appendChild(newEntry);
-            } else {
-                expenseCounter++;
-                const entryId = 'e' + expenseCounter;
-                const newEntry = createEntryElement(type, entryId);
-                list.appendChild(newEntry);
-            }
-            
-            updateRemoveButtons(type);
-        }
+    <!-- Add Transaction View -->
+    <section class="view hidden" id="view-add">
+      <div class="card">
+        <div class="card-header">
+          <h3>Smart Entry</h3>
+          <span class="hint">Type naturally — e.g. "Lunch at cafe 250 card" or "Salary 50000"</span>
+        </div>
+        <div class="smart-entry">
+          <div class="smart-input-wrap">
+            <i data-lucide="sparkles" class="smart-icon"></i>
+            <input type="text" id="smartInput" placeholder='Try: "Coffee 120" or "Uber 350 taxi cash"' autocomplete="off" />
+            <kbd>Enter</kbd>
+          </div>
+          <div class="parse-preview" id="parsePreview"></div>
+        </div>
+      </div>
 
-        function createEntryElement(type, id) {
-            const div = document.createElement('div');
-            div.className = 'entry-item';
-            div.setAttribute('data-entry-id', id);
-            div.innerHTML = `
-                <div class="entry-desc">
-                    <input type="text" placeholder="Description" class="entry-desc-input">
-                </div>
-                <div class="entry-amount">
-                    <input type="number" placeholder="Amount (₹)" class="entry-amount-input" value="0">
-                </div>
-                <button class="remove-btn" onclick="removeEntry('${type}', '${id}')">×</button>
-            `;
-            return div;
-        }
+      <div class="card">
+        <div class="card-header"><h3>Manual Entry</h3></div>
+        <form id="txForm" class="form-grid">
+          <div class="form-group">
+            <label>Type</label>
+            <div class="seg-control">
+              <button type="button" class="seg active" data-type="expense">Expense</button>
+              <button type="button" class="seg" data-type="income">Income</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Amount</label>
+            <input type="number" id="fAmount" step="0.01" min="0" required placeholder="0.00" />
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <input type="text" id="fDesc" required placeholder="What was it for?" />
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="fCategory"></select>
+          </div>
+          <div class="form-group">
+            <label>Payment Method</label>
+            <select id="fMethod">
+              <option>Cash</option>
+              <option>Card</option>
+              <option>UPI</option>
+              <option>Bank Transfer</option>
+              <option>Wallet</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="datetime-local" id="fDate" />
+          </div>
+          <div class="form-group full">
+            <label>Notes (optional)</label>
+            <textarea id="fNotes" rows="2"></textarea>
+          </div>
+          <div class="form-actions full">
+            <button type="button" class="btn btn-ghost" id="resetForm">Reset</button>
+            <button type="submit" class="btn btn-primary">
+              <i data-lucide="save"></i><span>Save Transaction</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
 
-        function removeEntry(type, id) {
-            const entry = document.querySelector(`[data-entry-id="${id}"]`);
-            if (entry) {
-                entry.remove();
-                updateRemoveButtons(type);
-            }
-        }
+    <!-- Transactions View -->
+    <section class="view hidden" id="view-transactions">
+      <div class="card">
+        <div class="card-header">
+          <h3>All Transactions</h3>
+          <div class="table-actions">
+            <div class="search-box">
+              <i data-lucide="search"></i>
+              <input type="text" id="searchInput" placeholder="Search description, notes..." />
+            </div>
+            <select id="filterCategory"><option value="">All Categories</option></select>
+            <select id="filterMethod"><option value="">All Methods</option></select>
+            <select id="filterType">
+              <option value="">All Types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            <button class="btn btn-ghost" id="clearFilters">
+              <i data-lucide="x"></i><span>Clear</span>
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="pro-table" id="txTable">
+            <thead>
+              <tr>
+                <th data-sort="date" class="sortable">Date <i data-lucide="chevrons-up-down"></i></th>
+                <th data-sort="desc" class="sortable">Description <i data-lucide="chevrons-up-down"></i></th>
+                <th data-sort="category" class="sortable">Category <i data-lucide="chevrons-up-down"></i></th>
+                <th>Method</th>
+                <th data-sort="amount" class="sortable num">Amount <i data-lucide="chevrons-up-down"></i></th>
+                <th class="num">Balance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </section>
 
-        function updateRemoveButtons(type) {
-            const listId = type === 'collection' ? 'collectionList' : 'expenseList';
-            const entries = document.querySelectorAll(`#${listId} .entry-item`);
-            entries.forEach((entry, index) => {
-                const removeBtn = entry.querySelector('.remove-btn');
-                if (entries.length > 1) {
-                    removeBtn.style.display = 'block';
-                } else {
-                    removeBtn.style.display = 'none';
-                }
-            });
-        }
+    <!-- Reports View -->
+    <section class="view hidden" id="view-reports">
+      <div class="card">
+        <div class="card-header"><h3>Export Data</h3></div>
+        <div class="export-grid">
+          <button class="export-btn" data-export="pdf">
+            <i data-lucide="file-text"></i>
+            <strong>PDF Report</strong>
+            <span>Professional formatted statement</span>
+          </button>
+          <button class="export-btn" data-export="excel">
+            <i data-lucide="file-spreadsheet"></i>
+            <strong>Excel (.xlsx)</strong>
+            <span>With formulas & formatting</span>
+          </button>
+          <button class="export-btn" data-export="csv">
+            <i data-lucide="file-spreadsheet"></i>
+            <strong>CSV</strong>
+            <span>Universal import format</span>
+          </button>
+          <button class="export-btn" data-export="json">
+            <i data-lucide="database"></i>
+            <strong>JSON Backup</strong>
+            <span>Full data backup</span>
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Summary Report</h3>
+          <div>
+            <select id="reportRange">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="all">All time</option>
+            </select>
+          </div>
+        </div>
+        <div id="reportContent"></div>
+      </div>
+    </section>
 
-        function saveData() {
-            updateSummary();
-            alert('Data calculated successfully! You can now export your report.');
-        }
+    <!-- Settings View -->
+    <section class="view hidden" id="view-settings">
+      <div class="card">
+        <div class="card-header"><h3>Categories</h3></div>
+        <div class="category-manager">
+          <div id="categoryList" class="category-list"></div>
+          <div class="add-category">
+            <input type="text" id="newCategory" placeholder="New category name" />
+            <button class="btn btn-primary" id="addCategory">Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Data Management</h3></div>
+        <div class="settings-actions">
+          <label class="btn btn-ghost">
+            <i data-lucide="upload"></i><span>Import Backup</span>
+            <input type="file" id="importFile" accept=".json" hidden />
+          </label>
+          <button class="btn btn-ghost" id="exportBackup">
+            <i data-lucide="download"></i><span>Export Backup</span>
+          </button>
+          <button class="btn btn-danger" id="clearData">
+            <i data-lucide="trash-2"></i><span>Clear All Data</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
 
-        function updateSummary() {
-            const selectedDate = document.getElementById('selectedDate').value;
-            
-            // Calculate collections
-            let totalCollection = 0;
-            const collections = [];
-            document.querySelectorAll('#collectionList .entry-item').forEach(entry => {
-                const desc = entry.querySelector('.entry-desc-input').value.trim() || 'Unnamed';
-                const amount = parseFloat(entry.querySelector('.entry-amount-input').value) || 0;
-                if (amount > 0) {
-                    collections.push({ desc, amount });
-                    totalCollection += amount;
-                }
-            });
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
 
-            // Calculate expenses
-            let totalExpense = 0;
-            const expenses = [];
-            document.querySelectorAll('#expenseList .entry-item').forEach(entry => {
-                const desc = entry.querySelector('.entry-desc-input').value.trim() || 'Unnamed';
-                const amount = parseFloat(entry.querySelector('.entry-amount-input').value) || 0;
-                if (amount > 0) {
-                    expenses.push({ desc, amount });
-                    totalExpense += amount;
-                }
-            });
+<!-- Edit Modal -->
+<div class="modal hidden" id="editModal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Edit Transaction</h3>
+      <button class="icon-btn" id="closeModal"><i data-lucide="x"></i></button>
+    </div>
+    <form id="editForm" class="form-grid">
+      <input type="hidden" id="eId" />
+      <div class="form-group">
+        <label>Type</label>
+        <select id="eType"><option value="expense">Expense</option><option value="income">Income</option></select>
+      </div>
+      <div class="form-group">
+        <label>Amount</label>
+        <input type="number" id="eAmount" step="0.01" required />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="eDesc" required />
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="eCategory"></select>
+      </div>
+      <div class="form-group">
+        <label>Method</label>
+        <select id="eMethod">
+          <option>Cash</option><option>Card</option><option>UPI</option>
+          <option>Bank Transfer</option><option>Wallet</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="datetime-local" id="eDate" required />
+      </div>
+      <div class="form-group full">
+        <label>Notes</label>
+        <textarea id="eNotes" rows="2"></textarea>
+      </div>
+      <div class="form-actions full">
+        <button type="button" class="btn btn-ghost" id="cancelEdit">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-            // Calculate balance
-            const netBalance = totalCollection - totalExpense;
+<script>
+  /* =========================================================
+   FinConsole — Smart Expense Tracker (Vanilla JS + IndexedDB)
+   ========================================================= */
 
-            // Store current data for export
-            currentData = {
-                date: selectedDate,
-                collections: collections,
-                expenses: expenses,
-                totalCollection: totalCollection,
-                totalExpense: totalExpense,
-                netBalance: netBalance
-            };
+// ---------- Constants ----------
+const DEFAULT_CATEGORIES = [
+  'Food & Dining', 'Transport', 'Shopping', 'Utilities',
+  'Health', 'Entertainment', 'Education', 'Rent',
+  'Salary', 'Freelance', 'Investment', 'Other'
+];
 
-            // Update summary boxes
-            document.getElementById('totalCollection').textContent = `₹${formatNumber(totalCollection)}`;
-            document.getElementById('totalExpense').textContent = `₹${formatNumber(totalExpense)}`;
-            document.getElementById('netBalance').textContent = `₹${formatNumber(netBalance)}`;
+const CATEGORY_KEYWORDS = {
+  'Food & Dining': ['lunch','dinner','breakfast','food','cafe','coffee','restaurant','meal','pizza','burger','starbucks','mcdonald','kfc','swiggy','zomato','tea','snack'],
+  'Transport': ['uber','ola','taxi','cab','bus','train','metro','fuel','petrol','diesel','parking','toll','airticket','flight','flight'],
+  'Shopping': ['amazon','flipkart','myntra','clothes','shoes','electronics','mobile','laptop','grocery','supermarket'],
+  'Utilities': ['electricity','water','gas','internet','wifi','mobile recharge','phone bill','broadband'],
+  'Health': ['doctor','medicine','pharmacy','hospital','clinic','gym','yoga','medical'],
+  'Entertainment': ['movie','netflix','spotify','hotstar','concert','game','theater','pub','bar'],
+  'Education': ['book','course','tuition','school','college','udemy','coursera','exam'],
+  'Rent': ['rent','lease','mortgage','housing'],
+  'Salary': ['salary','payroll','wages'],
+  'Freelance': ['freelance','client','project','consulting'],
+  'Investment': ['dividend','interest','stock','mutual fund','fd','rd']
+};
 
-            // Update collection list
-            let collectionHTML = '';
-            if (collections.length === 0) {
-                collectionHTML = '<div style="text-align: center; color: #999; padding: 20px;">No collections recorded</div>';
-            } else {
-                collections.forEach(item => {
-                    collectionHTML += `
-                        <div class="list-item collection">
-                            <div class="list-desc">${item.desc}</div>
-                            <div class="list-amount">₹${formatNumber(item.amount)}</div>
-                        </div>
-                    `;
-                });
-            }
-            document.getElementById('collectionSummaryList').innerHTML = collectionHTML;
+const METHOD_KEYWORDS = {
+  'Cash': ['cash'],
+  'Card': ['card','credit','debit','visa','mastercard'],
+  'UPI': ['upi','gpay','phonepe','paytm','bhim'],
+  'Bank Transfer': ['bank','neft','rtgs','imps','transfer'],
+  'Wallet': ['wallet','paypal','paytm wallet']
+};
 
-            // Update expense list
-            let expenseHTML = '';
-            if (expenses.length === 0) {
-                expenseHTML = '<div style="text-align: center; color: #999; padding: 20px;">No expenses recorded</div>';
-            } else {
-                expenses.forEach(item => {
-                    expenseHTML += `
-                        <div class="list-item expense">
-                            <div class="list-desc">${item.desc}</div>
-                            <div class="list-amount">₹${formatNumber(item.amount)}</div>
-                        </div>
-                    `;
-                });
-            }
-            document.getElementById('expenseSummaryList').innerHTML = expenseHTML;
-        }
+const PAGE_SIZE = 25;
 
-        function formatNumber(num) {
-            return Math.round(num).toLocaleString('en-IN');
-        }
+// ---------- State ----------
+const state = {
+  db: null,
+  transactions: [],
+  categories: [...DEFAULT_CATEGORIES],
+  currentView: 'dashboard',
+  filters: { search: '', category: '', method: '', type: '', dateFrom: null, dateTo: null },
+  sort: { key: 'date', dir: 'desc' },
+  page: 1,
+  chartFlow: null,
+  chartCat: null
+};
 
-        function exportPDF() {
-            if (!currentData) {
-                alert('Please save and calculate data first before exporting');
-                return;
-            }
+// ---------- IndexedDB ----------
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('FinConsoleDB', 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('transactions')) {
+        const store = db.createObjectStore('transactions', { keyPath: 'id' });
+        store.createIndex('date', 'date');
+      }
+      if (!db.objectStoreNames.contains('meta')) {
+        db.createObjectStore('meta', { keyPath: 'key' });
+      }
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+const idbTx = (mode = 'readonly') => state.db.transaction(['transactions','meta'], mode);
+const txStore = mode => idbTx(mode).objectStore('transactions');
+const metaStore = mode => idbTx(mode).objectStore('meta');
 
-            const date = new Date(currentData.date);
-            const formattedDate = date.toLocaleDateString('en-IN', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
+function dbGetAll() {
+  return new Promise(res => {
+    const req = txStore().getAll();
+    req.onsuccess = () => res(req.result);
+  });
+}
+function dbPut(tx) {
+  return new Promise(res => {
+    const req = txStore('readwrite').put(tx);
+    req.onsuccess = () => res();
+  });
+}
+function dbDelete(id) {
+  return new Promise(res => {
+    const req = txStore('readwrite').delete(id);
+    req.onsuccess = () => res();
+  });
+}
+function dbClear() {
+  return new Promise(res => {
+    const req = txStore('readwrite').clear();
+    req.onsuccess = () => res();
+  });
+}
+function dbMetaGet(key) {
+  return new Promise(res => {
+    const req = metaStore().get(key);
+    req.onsuccess = () => res(req.result?.value);
+  });
+}
+function dbMetaSet(key, value) {
+  return new Promise(res => {
+    const req = metaStore('readwrite').put({ key, value });
+    req.onsuccess = () => res();
+  });
+}
 
-            let content = '';
-            content += '═'.repeat(80) + '\n';
-            content += ' '.repeat(20) + 'DAILY CASH STATEMENT\n';
-            content += ' '.repeat(20) + 'destiny-tracer.github.io\n';
-            content += '═'.repeat(80) + '\n\n';
-            
-            content += `Statement Date: ${formattedDate}\n`;
-            content += `Generated: ${new Date().toLocaleString('en-IN')}\n`;
-            content += `Account: Cash Book\n\n`;
-            
-            content += '─'.repeat(80) + '\n';
-            content += ' '.repeat(28) + 'TRANSACTION DETAILS\n';
-            content += '─'.repeat(80) + '\n\n';
-            
-            // Collections section
-            content += 'CASH RECEIPTS (CR)\n';
-            content += '─'.repeat(80) + '\n';
-            content += 'Description'.padEnd(50) + 'Amount (₹)'.padStart(30) + '\n';
-            content += '─'.repeat(80) + '\n';
-            
-            if (currentData.collections.length === 0) {
-                content += 'No receipts recorded'.padEnd(50) + '0.00'.padStart(30) + '\n';
-            } else {
-                currentData.collections.forEach(item => {
-                    const desc = item.desc.substring(0, 45);
-                    const amount = formatNumber(item.amount);
-                    content += desc.padEnd(50) + amount.padStart(30) + '\n';
-                });
-            }
-            
-            content += '─'.repeat(80) + '\n';
-            content += 'TOTAL RECEIPTS'.padEnd(50) + formatNumber(currentData.totalCollection).padStart(30) + '\n';
-            content += '═'.repeat(80) + '\n\n';
-            
-            // Expenses section
-            content += 'CASH PAYMENTS (DR)\n';
-            content += '─'.repeat(80) + '\n';
-            content += 'Description'.padEnd(50) + 'Amount (₹)'.padStart(30) + '\n';
-            content += '─'.repeat(80) + '\n';
-            
-            if (currentData.expenses.length === 0) {
-                content += 'No payments recorded'.padEnd(50) + '0.00'.padStart(30) + '\n';
-            } else {
-                currentData.expenses.forEach(item => {
-                    const desc = item.desc.substring(0, 45);
-                    const amount = formatNumber(item.amount);
-                    content += desc.padEnd(50) + amount.padStart(30) + '\n';
-                });
-            }
-            
-            content += '─'.repeat(80) + '\n';
-            content += 'TOTAL PAYMENTS'.padEnd(50) + formatNumber(currentData.totalExpense).padStart(30) + '\n';
-            content += '═'.repeat(80) + '\n\n';
-            
-            // Summary section
-            content += ' '.repeat(28) + 'CASH BOOK SUMMARY\n';
-            content += '═'.repeat(80) + '\n';
-            content += 'Opening Balance'.padEnd(50) + '0.00'.padStart(30) + '\n';
-            content += 'Add: Total Receipts'.padEnd(50) + formatNumber(currentData.totalCollection).padStart(30) + '\n';
-            content += 'Less: Total Payments'.padEnd(50) + `(${formatNumber(currentData.totalExpense)})`.padStart(30) + '\n';
-            content += '─'.repeat(80) + '\n';
-            
-            const balanceLabel = currentData.netBalance >= 0 ? 'CLOSING BALANCE' : 'DEFICIT';
-            const balanceAmount = Math.abs(currentData.netBalance);
-            content += balanceLabel.padEnd(50) + formatNumber(balanceAmount).padStart(30) + '\n';
-            content += '═'.repeat(80) + '\n\n';
-            
-            // Footer
-            content += '\n';
-            content += 'This is a computer generated statement and does not require signature.\n';
-            content += 'For queries, visit: destiny-tracer.github.io\n';
-            content += '─'.repeat(80) + '\n';
-            
-            // Create blob and download
-            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `cash-statement-${currentData.date}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+// ---------- Smart Parser ----------
+function parseAmount(text) {
+  const m = text.match(/(?:₹|rs\.?|inr|\$|€|£)?\s*(\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?)/i);
+  if (!m) return null;
+  return parseFloat(m[1].replace(/,/g, ''));
+}
+function detectCategory(text) {
+  const lower = text.toLowerCase();
+  let best = null, bestScore = 0;
+  for (const [cat, words] of Object.entries(CATEGORY_KEYWORDS)) {
+    for (const w of words) {
+      if (lower.includes(w)) {
+        const score = w.length;
+        if (score > bestScore) { bestScore = score; best = cat; }
+      }
+    }
+  }
+  return best;
+}
+function detectMethod(text) {
+  const lower = text.toLowerCase();
+  for (const [method, words] of Object.entries(METHOD_KEYWORDS)) {
+    for (const w of words) if (lower.includes(w)) return method;
+  }
+  return null;
+}
+function detectType(text) {
+  const lower = text.toLowerCase();
+  const incomeWords = ['salary','received','got','earned','refund','dividend','interest','payment received'];
+  for (const w of incomeWords) if (lower.includes(w)) return 'income';
+  return 'expense';
+}
+function parseSmart(text) {
+  const amount = parseAmount(text);
+  if (!amount) return null;
+  const type = detectType(text);
+  const category = detectCategory(text) || (type === 'income' ? 'Salary' : 'Other');
+  const method = detectMethod(text) || 'Cash';
+  let desc = text.replace(/(?:₹|rs\.?|inr|\$|€|£)\s*\d[\d,.]*/gi, '').trim();
+  desc = desc.replace(/\b(cash|card|upi|wallet|bank)\b/gi, '').trim();
+  if (!desc) desc = category;
+  return { type, amount, category, method, desc };
+}
 
-        function exportCSV() {
-            if (!currentData) {
-                alert('Please save and calculate data first before exporting');
-                return;
-            }
+// ---------- UI Helpers ----------
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtDate = d => new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-            let csv = 'Daily Cash Tracker Report\n';
-            csv += `Date,${currentData.date}\n`;
-            csv += `Generated,${new Date().toLocaleString()}\n\n`;
-            
-            csv += 'COLLECTIONS\n';
-            csv += 'Description,Amount\n';
-            if (currentData.collections.length > 0) {
-                currentData.collections.forEach(item => {
-                    csv += `"${item.desc}",${item.amount}\n`;
-                });
-            }
-            csv += `TOTAL COLLECTION,${currentData.totalCollection}\n\n`;
-            
-            csv += 'EXPENSES\n';
-            csv += 'Description,Amount\n';
-            if (currentData.expenses.length > 0) {
-                currentData.expenses.forEach(item => {
-                    csv += `"${item.desc}",${item.amount}\n`;
-                });
-            }
-            csv += `TOTAL EXPENSE,${currentData.totalExpense}\n\n`;
-            
-            csv += 'SUMMARY\n';
-            csv += 'Item,Amount\n';
-            csv += `Total Collection,${currentData.totalCollection}\n`;
-            csv += `Total Expense,${currentData.totalExpense}\n`;
-            csv += `Net Balance,${currentData.netBalance}\n`;
+function toast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : 'info'}"></i><span>${msg}</span>`;
+  $('#toastContainer').appendChild(t);
+  lucide.createIcons();
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2800);
+}
 
-            // Download CSV
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `cash-tracker-${currentData.date}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+function switchView(view) {
+  state.currentView = view;
+  $$('.view').forEach(v => v.classList.add('hidden'));
+  $(`#view-${view}`).classList.remove('hidden');
+  $$('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === view));
+  const titles = { dashboard: 'Dashboard', add: 'Add Transaction', transactions: 'Transactions', reports: 'Reports', settings: 'Settings' };
+  $('#viewTitle').textContent = titles[view];
+  if (view === 'dashboard') renderDashboard();
+  if (view === 'transactions') renderTransactionsTable();
+  if (view === 'reports') renderReport();
+  if (view === 'settings') renderCategories();
+}
 
-        // Initialize
-        updateRemoveButtons('collection');
-        updateRemoveButtons('expense');
-    </script>
+// ---------- Populate Category Selects ----------
+function populateCategorySelects() {
+  const selects = ['#fCategory', '#eCategory', '#filterCategory'];
+  selects.forEach(sel => {
+    const el = $(sel);
+    if (!el) return;
+    const current = el.value;
+    const isFilter = sel.includes('filter');
+    el.innerHTML = isFilter ? '<option value="">All Categories</option>' : '';
+    state.categories.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      el.appendChild(opt);
+    });
+    el.value = current;
+  });
+}
+
+// ---------- Dashboard ----------
+function renderDashboard() {
+  const filtered = getFilteredTx();
+  const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  $('#statIncome').textContent = fmt(income);
+  $('#statExpense').textContent = fmt(expense);
+  $('#statBalance').textContent = fmt(income - expense);
+  $('#statCount').textContent = filtered.length;
+
+  // Recent table
+  const recent = [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+  const balances = computeBalances(recent);
+  const tbody = $('#recentTable tbody');
+  tbody.innerHTML = recent.map((t, i) => `
+    <tr>
+      <td>${fmtDate(t.date)}</td>
+      <td>${escapeHtml(t.description)}</td>
+      <td><span class="cat-badge">${escapeHtml(t.category)}</span></td>
+      <td>${escapeHtml(t.method)}</td>
+      <td class="num">${t.type === 'expense' ? `<span class="amount-out">${fmt(t.amount)}</span>` : '—'}</td>
+      <td class="num">${t.type === 'income' ? `<span class="amount-in">${fmt(t.amount)}</span>` : '—'}</td>
+      <td class="num">${fmt(balances[i])}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No transactions yet. Add your first one!</td></tr>`;
+
+  renderCharts();
+}
+
+function computeBalances(txs) {
+  const sorted = [...txs].sort((a, b) => new Date(a.date) - new Date(b.date));
+  let bal = 0;
+  const map = new Map();
+  sorted.forEach(t => {
+    bal += t.type === 'income' ? t.amount : -t.amount;
+    map.set(t.id, bal);
+  });
+  return txs.map(t => map.get(t.id) || 0);
+}
+
+function renderCharts() {
+  const days = parseInt($('#chartPeriod').value);
+  const cutoff = Date.now() - days * 86400000;
+  const byDate = {};
+  state.transactions.forEach(t => {
+    const d = new Date(t.date);
+    if (d.getTime() < cutoff) return;
+    const key = d.toISOString().slice(0, 10);
+    if (!byDate[key]) byDate[key] = { income: 0, expense: 0 };
+    byDate[key][t.type] += t.amount;
+  });
+  const labels = Object.keys(byDate).sort();
+  const incomeData = labels.map(l => byDate[l].income);
+  const expenseData = labels.map(l => byDate[l].expense);
+
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const gridColor = isDark ? '#243049' : '#e4e8ef';
+
+  if (state.chartFlow) state.chartFlow.destroy();
+  state.chartFlow = new Chart($('#flowChart'), {
+    type: 'line',
+    data: {
+      labels: labels.map(l => new Date(l).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })),
+      datasets: [
+        { label: 'Income', data: incomeData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,.1)', tension: .3, fill: true },
+        { label: 'Expense', data: expenseData, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.1)', tension: .3, fill: true }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: textColor } } },
+      scales: {
+        x: { ticks: { color: textColor }, grid: { color: gridColor } },
+        y: { ticks: { color: textColor, callback: v => '₹' + v }, grid: { color: gridColor } }
+      }
+    }
+  });
+
+  // Category chart
+  const catMap = {};
+  state.transactions.filter(t => t.type === 'expense').forEach(t => {
+    catMap[t.category] = (catMap[t.category] || 0) + t.amount;
+  });
+  const catLabels = Object.keys(catMap);
+  const catData = Object.values(catMap);
+  const palette = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16'];
+
+  if (state.chartCat) state.chartCat.destroy();
+  state.chartCat = new Chart($('#categoryChart'), {
+    type: 'doughnut',
+    data: {
+      labels: catLabels,
+      datasets: [{ data: catData, backgroundColor: palette, borderWidth: 0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: textColor, padding: 12, font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+// ---------- Transactions Table ----------
+function getFilteredTx() {
+  let list = [...state.transactions];
+  const f = state.filters;
+  if (f.search) {
+    const q = f.search.toLowerCase();
+    list = list.filter(t => t.description.toLowerCase().includes(q) || (t.notes || '').toLowerCase().includes(q));
+  }
+  if (f.category) list = list.filter(t => t.category === f.category);
+  if (f.method) list = list.filter(t => t.method === f.method);
+  if (f.type) list = list.filter(t => t.type === f.type);
+  if (f.dateFrom) list = list.filter(t => new Date(t.date) >= new Date(f.dateFrom));
+  if (f.dateTo) list = list.filter(t => new Date(t.date) <= new Date(f.dateTo + 'T23:59:59'));
+  return list;
+}
+
+function renderTransactionsTable() {
+  let list = getFilteredTx();
+  const { key, dir } = state.sort;
+  list.sort((a, b) => {
+    let va = a[key], vb = b[key];
+    if (key === 'date') { va = new Date(va); vb = new Date(vb); }
+    if (key === 'amount') { va = a.amount; vb = b.amount; }
+    if (va < vb) return dir === 'asc' ? -1 : 1;
+    if (va > vb) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (state.page > totalPages) state.page = totalPages;
+  const start = (state.page - 1) * PAGE_SIZE;
+  const pageItems = list.slice(start, start + PAGE_SIZE);
+  const balances = computeBalances(pageItems);
+
+  const tbody = $('#txTable tbody');
+  tbody.innerHTML = pageItems.map((t, i) => `
+    <tr data-id="${t.id}">
+      <td>${fmtDate(t.date)}</td>
+      <td>${escapeHtml(t.description)}</td>
+      <td><span class="cat-badge">${escapeHtml(t.category)}</span></td>
+      <td>${escapeHtml(t.method)}</td>
+      <td class="num ${t.type === 'income' ? 'amount-in' : 'amount-out'}">
+        ${t.type === 'income' ? '+' : '-'}${fmt(t.amount)}
+      </td>
+      <td class="num">${fmt(balances[i])}</td>
+      <td>
+        <button class="icon-btn" data-act="edit" title="Edit"><i data-lucide="pencil"></i></button>
+        <button class="icon-btn" data-act="delete" title="Delete"><i data-lucide="trash-2"></i></button>
+      </td>
+    </tr>
+  `).join('') || `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No transactions match your filters.</td></tr>`;
+
+  // Pagination
+  const pag = $('#pagination');
+  pag.innerHTML = '';
+  const prev = document.createElement('button');
+  prev.textContent = '‹ Prev'; prev.disabled = state.page === 1;
+  prev.onclick = () => { state.page--; renderTransactionsTable(); };
+  pag.appendChild(prev);
+  for (let i = 1; i <= totalPages; i++) {
+    const b = document.createElement('button');
+    b.textContent = i;
+    if (i === state.page) b.classList.add('active');
+    b.onclick = () => { state.page = i; renderTransactionsTable(); };
+    pag.appendChild(b);
+  }
+  const next = document.createElement('button');
+  next.textContent = 'Next ›'; next.disabled = state.page === totalPages;
+  next.onclick = () => { state.page++; renderTransactionsTable(); };
+  pag.appendChild(next);
+
+  lucide.createIcons();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ---------- Add Transaction ----------
+async function addTransaction(data) {
+  const tx = {
+    id: data.id || (Date.now() + '-' + Math.random().toString(36).slice(2, 7)),
+    type: data.type || 'expense',
+    amount: parseFloat(data.amount),
+    description: data.description.trim(),
+    category: data.category || 'Other',
+    method: data.method || 'Cash',
+    date: data.date || new Date().toISOString(),
+    notes: data.notes || '',
+    createdAt: Date.now()
+  };
+  await dbPut(tx);
+  state.transactions.push(tx);
+  toast('Transaction saved', 'success');
+  if (state.currentView === 'dashboard') renderDashboard();
+  if (state.currentView === 'transactions') renderTransactionsTable();
+  return tx;
+}
+
+async function deleteTransaction(id) {
+  if (!confirm('Delete this transaction?')) return;
+  await dbDelete(id);
+  state.transactions = state.transactions.filter(t => t.id !== id);
+  toast('Transaction deleted', 'success');
+  if (state.currentView === 'dashboard') renderDashboard();
+  if (state.currentView === 'transactions') renderTransactionsTable();
+}
+
+async function updateTransaction(data) {
+  const existing = state.transactions.find(t => t.id === data.id);
+  const updated = { ...existing, ...data, amount: parseFloat(data.amount) };
+  await dbPut(updated);
+  state.transactions = state.transactions.map(t => t.id === data.id ? updated : t);
+  toast('Transaction updated', 'success');
+  if (state.currentView === 'dashboard') renderDashboard();
+  if (state.currentView === 'transactions') renderTransactionsTable();
+}
+
+// ---------- Reports ----------
+function renderReport() {
+  const days = $('#reportRange').value;
+  let list = [...state.transactions];
+  if (days !== 'all') {
+    const cutoff = Date.now() - parseInt(days) * 86400000;
+    list = list.filter(t => new Date(t.date).getTime() >= cutoff);
+  }
+  const income = list.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = list.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+  const catMap = {};
+  list.filter(t => t.type === 'expense').forEach(t => {
+    catMap[t.category] = (catMap[t.category] || 0) + t.amount;
+  });
+  const catRows = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+
+  $('#reportContent').innerHTML = `
+    <div class="report-section">
+      <h4>Summary</h4>
+      <div class="report-row"><span>Total Income</span><span class="amount-in">${fmt(income)}</span></div>
+      <div class="report-row"><span>Total Expense</span><span class="amount-out">${fmt(expense)}</span></div>
+      <div class="report-row"><span>Net Balance</span><span>${fmt(income - expense)}</span></div>
+      <div class="report-row"><span>Transactions</span><span>${list.length}</span></div>
+    </div>
+    <div class="report-section">
+      <h4>Expense by Category</h4>
+      ${catRows.map(([c, v]) => `<div class="report-row"><span>${escapeHtml(c)}</span><span>${fmt(v)}</span></div>`).join('') || '<div style="color:var(--text-muted);padding:10px">No expenses in this period.</div>'}
+    </div>
+  `;
+}
+
+// ---------- Export ----------
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const list = getFilteredTx().sort((a, b) => new Date(a.date) - new Date(b.date));
+  const balances = computeBalances(list);
+
+  doc.setFontSize(18); doc.text('FinConsole — Transaction Statement', 14, 20);
+  doc.setFontSize(10); doc.setTextColor(100);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 28);
+  const income = list.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = list.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  doc.text(`Income: ${fmt(income)}  |  Expense: ${fmt(expense)}  |  Net: ${fmt(income - expense)}`, 14, 34);
+
+  const rows = list.map((t, i) => [
+    fmtDate(t.date),
+    t.description,
+    t.category,
+    t.method,
+    t.type === 'income' ? fmt(t.amount) : '',
+    t.type === 'expense' ? fmt(t.amount) : '',
+    fmt(balances[i])
+  ]);
+
+  doc.autoTable({
+    startY: 42,
+    head: [['Date', 'Description', 'Category', 'Method', 'Credit', 'Debit', 'Balance']],
+    body: rows,
+    theme: 'striped',
+    headStyles: { fillColor: [37, 99, 235] },
+    styles: { fontSize: 9 }
+  });
+
+  doc.save(`finconsole-statement-${new Date().toISOString().slice(0,10)}.pdf`);
+  toast('PDF exported', 'success');
+}
+
+function exportExcel() {
+  const list = getFilteredTx().sort((a, b) => new Date(a.date) - new Date(b.date));
+  const balances = computeBalances(list);
+  const data = list.map((t, i) => ({
+    Date: new Date(t.date).toLocaleString(),
+    Type: t.type,
+    Description: t.description,
+    Category: t.category,
+    Method: t.method,
+    Amount: t.amount,
+    Credit: t.type === 'income' ? t.amount : '',
+    Debit: t.type === 'expense' ? t.amount : '',
+    Balance: balances[i],
+    Notes: t.notes || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+  XLSX.writeFile(wb, `finconsole-${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('Excel exported', 'success');
+}
+
+function exportCSV() {
+  const list = getFilteredTx().sort((a, b) => new Date(a.date) - new Date(b.date));
+  const balances = computeBalances(list);
+  const data = list.map((t, i) => ({
+    Date: new Date(t.date).toLocaleString(),
+    Type: t.type,
+    Description: t.description,
+    Category: t.category,
+    Method: t.method,
+    Amount: t.amount,
+    Credit: t.type === 'income' ? t.amount : '',
+    Debit: t.type === 'expense' ? t.amount : '',
+    Balance: balances[i],
+    Notes: t.notes || ''
+  }));
+  const csv = Papa.unparse(data);
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `finconsole-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('CSV exported', 'success');
+}
+
+function exportJSON() {
+  const data = { transactions: state.transactions, categories: state.categories, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `finconsole-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Backup exported', 'success');
+}
+
+async function importJSON(file) {
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data.transactions || !Array.isArray(data.transactions)) throw new Error('Invalid file');
+    for (const t of data.transactions) await dbPut(t);
+    if (data.categories) {
+      state.categories = [...new Set([...DEFAULT_CATEGORIES, ...data.categories])];
+      await dbMetaSet('categories', state.categories);
+    }
+    state.transactions = await dbGetAll();
+    populateCategorySelects();
+    renderDashboard();
+    toast(`Imported ${data.transactions.length} transactions`, 'success');
+  } catch (e) {
+    toast('Import failed: ' + e.message, 'error');
+  }
+}
+
+// ---------- Categories ----------
+async function renderCategories() {
+  const list = $('#categoryList');
+  list.innerHTML = state.categories.map(c => `
+    <div class="cat-chip">
+      <span>${escapeHtml(c)}</span>
+      ${DEFAULT_CATEGORIES.includes(c) ? '' : `<button data-del="${escapeHtml(c)}"><i data-lucide="x"></i></button>`}
+    </div>
+  `).join('');
+  lucide.createIcons();
+  list.querySelectorAll('[data-del]').forEach(b => {
+    b.onclick = async () => {
+      state.categories = state.categories.filter(c => c !== b.dataset.del);
+      await dbMetaSet('categories', state.categories);
+      populateCategorySelects();
+      renderCategories();
+    };
+  });
+}
+
+// ---------- Theme ----------
+function initTheme() {
+  const saved = localStorage.getItem('theme') || 'light';
+  document.documentElement.dataset.theme = saved;
+}
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem('theme', next);
+  renderCharts();
+}
+
+// ---------- Event Bindings ----------
+function bindEvents() {
+  // Navigation
+  document.addEventListener('click', e => {
+    const nav = e.target.closest('[data-view]');
+    if (nav) { e.preventDefault(); switchView(nav.dataset.view); }
+  });
+
+  // Theme
+  $('#themeToggle').onclick = toggleTheme;
+
+  // Quick add
+  $('#quickAdd').onclick = () => switchView('add');
+
+  // Menu toggle (mobile)
+  $('#menuToggle').onclick = () => $('.sidebar').classList.toggle('open');
+
+  // Smart input
+  const smartInput = $('#smartInput');
+  const preview = $('#parsePreview');
+  smartInput.addEventListener('input', () => {
+    const parsed = parseSmart(smartInput.value);
+    if (parsed) {
+      preview.classList.add('show');
+      preview.innerHTML = `
+        <div class="parse-row">
+          <div class="parse-item">Type<strong style="color:${parsed.type === 'income' ? 'var(--success)' : 'var(--danger)'}">${parsed.type.toUpperCase()}</strong></div>
+          <div class="parse-item">Amount<strong>${fmt(parsed.amount)}</strong></div>
+          <div class="parse-item">Category<strong>${escapeHtml(parsed.category)}</strong></div>
+          <div class="parse-item">Method<strong>${escapeHtml(parsed.method)}</strong></div>
+          <div class="parse-item">Description<strong>${escapeHtml(parsed.desc)}</strong></div>
+        </div>
+      `;
+    } else {
+      preview.classList.remove('show');
+    }
+  });
+  smartInput.addEventListener('keydown', async e => {
+    if (e.key === 'Enter') {
+      const parsed = parseSmart(smartInput.value);
+      if (!parsed) { toast('Could not parse — include an amount', 'error'); return; }
+      await addTransaction({
+        type: parsed.type, amount: parsed.amount, description: parsed.desc,
+        category: parsed.category, method: parsed.method, date: new Date().toISOString()
+      });
+      smartInput.value = '';
+      preview.classList.remove('show');
+    }
+  });
+
+  // Form type toggle
+  $$('.seg-control .seg').forEach(s => {
+    s.onclick = () => {
+      $$('.seg-control .seg').forEach(x => x.classList.remove('active'));
+      s.classList.add('active');
+    };
+  });
+
+  // Form submit
+  $('#txForm').onsubmit = async e => {
+    e.preventDefault();
+    const type = $('.seg-control .seg.active').dataset.type;
+    await addTransaction({
+      type,
+      amount: $('#fAmount').value,
+      description: $('#fDesc').value,
+      category: $('#fCategory').value,
+      method: $('#fMethod').value,
+      date: $('#fDate').value ? new Date($('#fDate').value).toISOString() : new Date().toISOString(),
+      notes: $('#fNotes').value
+    });
+    e.target.reset();
+    $('.seg-control .seg.active').classList.remove('active');
+    $('.seg-control .seg').dataset.type === 'expense' || ($$('.seg-control .seg')[0].classList.add('active'));
+    $('#fDate').value = new Date().toISOString().slice(0, 16);
+  };
+
+  $('#resetForm').onclick = () => $('#txForm').reset();
+
+  // Filters
+  $('#searchInput').addEventListener('input', e => {
+    state.filters.search = e.target.value;
+    state.page = 1;
+    renderTransactionsTable();
+  });
+  $('#filterCategory').onchange = e => { state.filters.category = e.target.value; state.page = 1; renderTransactionsTable(); };
+  $('#filterMethod').onchange = e => { state.filters.method = e.target.value; state.page = 1; renderTransactionsTable(); };
+  $('#filterType').onchange = e => { state.filters.type = e.target.value; state.page = 1; renderTransactionsTable(); };
+  $('#clearFilters').onclick = () => {
+    state.filters = { search: '', category: '', method: '', type: '', dateFrom: null, dateTo: null };
+    $('#searchInput').value = '';
+    $('#filterCategory').value = '';
+    $('#filterMethod').value = '';
+    $('#filterType').value = '';
+    $('#dateFrom').value = '';
+    $('#dateTo').value = '';
+    state.page = 1;
+    renderTransactionsTable();
+  };
+
+  // Date range
+  $('#applyRange').onclick = () => {
+    state.filters.dateFrom = $('#dateFrom').value || null;
+    state.filters.dateTo = $('#dateTo').value || null;
+    state.page = 1;
+    if (state.currentView === 'transactions') renderTransactionsTable();
+    if (state.currentView === 'dashboard') renderDashboard();
+  };
+
+  // Sort
+  $$('#txTable th[data-sort]').forEach(th => {
+    th.onclick = () => {
+      const key = th.dataset.sort;
+      if (state.sort.key === key) state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
+      else { state.sort.key = key; state.sort.dir = 'asc'; }
+      renderTransactionsTable();
+    };
+  });
+
+  // Table actions (edit/delete)
+  $('#txTable').addEventListener('click', e => {
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    const row = btn.closest('tr');
+    const id = row.dataset.id;
+    const tx = state.transactions.find(t => t.id === id);
+    if (btn.dataset.act === 'delete') deleteTransaction(id);
+    if (btn.dataset.act === 'edit') openEditModal(tx);
+  });
+
+  // Edit modal
+  $('#closeModal').onclick = () => $('#editModal').classList.add('hidden');
+  $('#cancelEdit').onclick = () => $('#editModal').classList.add('hidden');
+  $('.modal-backdrop').onclick = () => $('#editModal').classList.add('hidden');
+  $('#editForm').onsubmit = async e => {
+    e.preventDefault();
+    await updateTransaction({
+      id: $('#eId').value,
+      type: $('#eType').value,
+      amount: $('#eAmount').value,
+      description: $('#eDesc').value,
+      category: $('#eCategory').value,
+      method: $('#eMethod').value,
+      date: new Date($('#eDate').value).toISOString(),
+      notes: $('#eNotes').value
+    });
+    $('#editModal').classList.add('hidden');
+  };
+
+  // Chart period
+  $('#chartPeriod').onchange = renderCharts;
+  $('#reportRange').onchange = renderReport;
+
+  // Export
+  $$('[data-export]').forEach(b => {
+    b.onclick = () => {
+      const type = b.dataset.export;
+      if (type === 'pdf') exportPDF();
+      if (type === 'excel') exportExcel();
+      if (type === 'csv') exportCSV();
+      if (type === 'json') exportJSON();
+    };
+  });
+
+  // Settings
+  $('#addCategory').onclick = async () => {
+    const name = $('#newCategory').value.trim();
+    if (!name) return;
+    if (state.categories.includes(name)) { toast('Category exists', 'error'); return; }
+    state.categories.push(name);
+    await dbMetaSet('categories', state.categories);
+    $('#newCategory').value = '';
+    populateCategorySelects();
+    renderCategories();
+  };
+
+  $('#importFile').onchange = e => { if (e.target.files[0]) importJSON(e.target.files[0]); };
+  $('#exportBackup').onclick = exportJSON;
+  $('#clearData').onclick = async () => {
+    if (!confirm('Delete ALL transactions? This cannot be undone.')) return;
+    await dbClear();
+    state.transactions = [];
+    renderDashboard();
+    toast('All data cleared', 'success');
+  };
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea, select')) return;
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'n') { e.preventDefault(); switchView('add'); }
+      if (e.key === 'e') { e.preventDefault(); exportPDF(); }
+    }
+  });
+}
+
+function openEditModal(tx) {
+  $('#eId').value = tx.id;
+  $('#eType').value = tx.type;
+  $('#eAmount').value = tx.amount;
+  $('#eDesc').value = tx.description;
+  $('#eCategory').value = tx.category;
+  $('#eMethod').value = tx.method;
+  $('#eDate').value = new Date(tx.date).toISOString().slice(0, 16);
+  $('#eNotes').value = tx.notes || '';
+  $('#editModal').classList.remove('hidden');
+}
+
+// ---------- Init ----------
+async function init() {
+  initTheme();
+  state.db = await openDB();
+  state.transactions = await dbGetAll();
+  const savedCats = await dbMetaGet('categories');
+  if (savedCats) state.categories = [...new Set([...DEFAULT_CATEGORIES, ...savedCats])];
+
+  // Set default date
+  $('#fDate').value = new Date().toISOString().slice(0, 16);
+  const today = new Date().toISOString().slice(0, 10);
+  const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  $('#dateFrom').value = monthAgo;
+  $('#dateTo').value = today;
+
+  populateCategorySelects();
+  bindEvents();
+  lucide.createIcons();
+  renderDashboard();
+}
+
+init().catch(err => { console.error(err); toast('Initialization failed', 'error'); });
+</script>
 </body>
 </html>
